@@ -49,13 +49,13 @@ export default function EvidenceDrawer({ factor, response, isOpen, onToggle }) {
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center justify-between gap-2 px-5 py-3 bg-slate-900 hover:bg-slate-800 transition-colors duration-150 text-[var(--color-cyan-code)] text-xs font-mono uppercase tracking-wider"
+        className="w-full flex items-center justify-between gap-2 px-4 sm:px-5 py-3 bg-slate-900 hover:bg-slate-800 transition-colors duration-150 text-[var(--color-cyan-code)] text-xs font-mono uppercase tracking-wider min-w-0"
       >
-        <span className="flex items-center gap-2">
-          <FileSearch className="w-3.5 h-3.5" />
-          Evidence Trace
+        <span className="flex items-center gap-2 min-w-0">
+          <FileSearch className="w-3.5 h-3.5 flex-shrink-0" />
+          <span className="truncate">Evidence Trace</span>
         </span>
-        <span className="flex items-center gap-3">
+        <span className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
           <AdviceTypeBadge type={factor.advice_type} />
           {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
         </span>

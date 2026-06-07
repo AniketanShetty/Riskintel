@@ -31,8 +31,8 @@ export default function OutcomeHero({ verdict, primaryReason, userType, isMentor
           : 'bg-white border-slate-200 text-[var(--color-primary)]'
       }`}
     >
-      <div className="flex items-start gap-6">
-        <div className="flex-shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
+        <div className="flex-shrink-0 self-start sm:self-auto">
           <VerdictIcon tone={tone} />
         </div>
         <div className="flex-1 min-w-0">
