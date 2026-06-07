@@ -1,4 +1,4 @@
-import { Check, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react'
+import { Check, ArrowRight } from 'lucide-react'
 import { useState } from 'react'
 import EvidenceDrawer from './EvidenceDrawer'
 

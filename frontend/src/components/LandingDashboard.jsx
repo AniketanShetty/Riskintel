@@ -1,4 +1,3 @@
-import React from 'react';
 import PersonaSelector from './PersonaSelector';
 import mockPersonas from '../data/mockPersonas.json';
 import { UserCircle, Sprout, Lightbulb } from 'lucide-react';

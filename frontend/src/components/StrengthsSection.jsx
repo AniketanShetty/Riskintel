@@ -1,4 +1,3 @@
-import { CheckCircle2 } from 'lucide-react'
 import FactorCard from './FactorCard'
 
 export default function StrengthsSection({ factors, isMentorMode, response }) {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function ScoreVisualizer({ response, isMentorMode }) {
   const [animatedScore, setAnimatedScore] = useState(0);
@@ -6,17 +6,11 @@ export default function ScoreVisualizer({ response, isMentorMode }) {
   // Extract score properly from either Person A or Person B response
   const isPersonA = response?.user_type === 'person_a';
   let targetScore = 0;
-  let maxScore = 0;
-  let label = '';
 
   if (isPersonA) {
     targetScore = response?.eligibility?.probability ? Math.round(response.eligibility.probability * 100) : 0;
-    maxScore = 100;
-    label = "Eligibility Score";
   } else {
     targetScore = response?.readiness?.score || 0;
-    maxScore = 100;
-    label = "Readiness Score";
   }
 
   useEffect(() => {
@@ -41,14 +35,16 @@ export default function ScoreVisualizer({ response, isMentorMode }) {
   }, [targetScore]);
 
   // Determine colors based on score thresholds (same logic used in backend roughly)
-  let colorClass = isMentorMode ? 'text-blue-400' : 'text-blue-600';
-  if (targetScore >= 75) colorClass = isMentorMode ? 'text-emerald-400' : 'text-emerald-500';
-  else if (targetScore >= 50) colorClass = isMentorMode ? 'text-yellow-400' : 'text-yellow-500';
-  else colorClass = isMentorMode ? 'text-slate-400' : 'text-slate-400';
+  const colorClass = (targetScore >= 75)
+    ? (isMentorMode ? 'text-emerald-400' : 'text-emerald-500')
+    : (targetScore >= 50)
+      ? (isMentorMode ? 'text-yellow-400' : 'text-yellow-500')
+      : (isMentorMode ? 'text-slate-400' : 'text-slate-400');
 
   const radius = 36;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (animatedScore / maxScore) * circumference;
+  const strokeDashoffset = circumference - (animatedScore / 100) * circumference;
+  const label = isPersonA ? "Eligibility Score" : "Readiness Score";
 
   return (
     <div className="flex flex-col items-center justify-center">

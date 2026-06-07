@@ -1,5 +1,4 @@
 import { ChevronDown, ChevronUp, FileSearch, GitBranch, Layers } from 'lucide-react'
-import { useState } from 'react'
 
 function AdviceTypeBadge({ type }) {
   const map = {

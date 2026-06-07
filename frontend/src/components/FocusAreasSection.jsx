@@ -1,4 +1,3 @@
-import { Target } from 'lucide-react'
 import FactorCard from './FactorCard'
 
 export default function FocusAreasSection({ factors, isMentorMode, response }) {

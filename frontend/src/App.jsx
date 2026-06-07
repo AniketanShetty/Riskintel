@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Loader2, Inbox } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 
 import AppHeader from './components/AppHeader'
 import OutcomeHero from './components/OutcomeHero'
@@ -35,16 +35,41 @@ function splitFactors(response) {
 }
 
 export default function App() {
-  const [currentPersona, setCurrentPersona] = useState(null)
-  const [viewState, setViewState] = useState('landing') // landing, traditional_form, ntc_form, results
-  const [isMentorMode, setIsMentorMode] = useState(false)
+  const [currentPersona, setCurrentPersona] = useState(() => {
+    try {
+      const saved = localStorage.getItem('riskintel_persona')
+      return saved ? JSON.parse(saved) : null
+    } catch (e) {
+      console.error("Failed to parse saved persona:", e)
+      return null
+    }
+  })
+  const [viewState, setViewState] = useState(() => {
+    return localStorage.getItem('riskintel_viewstate') || 'landing'
+  })
+  const [isMentorMode, setIsMentorMode] = useState(() => {
+    return localStorage.getItem('riskintel_mentormode') === 'true'
+  })
   const [isLoading, setIsLoading] = useState(false)
   const [showArchitecture, setShowArchitecture] = useState(false)
 
   useEffect(() => {
     if (isMentorMode) document.body.classList.add('mentor-mode')
     else document.body.classList.remove('mentor-mode')
+    localStorage.setItem('riskintel_mentormode', isMentorMode)
   }, [isMentorMode])
+
+  useEffect(() => {
+    if (currentPersona) {
+      localStorage.setItem('riskintel_persona', JSON.stringify(currentPersona))
+    } else {
+      localStorage.removeItem('riskintel_persona')
+    }
+  }, [currentPersona])
+
+  useEffect(() => {
+    localStorage.setItem('riskintel_viewstate', viewState)
+  }, [viewState])
 
   const handleSubmitAssessment = async (payload, endpointUrl) => {
     setIsLoading(true)
@@ -131,13 +156,18 @@ export default function App() {
 
       {showArchitecture && <ArchitecturePage onClose={() => setShowArchitecture(false)} />}
 
-      <main className="max-w-5xl mx-auto mt-8 px-6 pb-24 space-y-8">
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-32 space-y-4">
-            <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
-            <p className="text-slate-500 font-medium">Processing assessment…</p>
+      <main className="max-w-5xl mx-auto mt-8 px-6 pb-24 space-y-8 relative">
+        {isLoading && (
+          <div className="fixed inset-0 bg-slate-900/10 backdrop-blur-[2px] z-[100] flex flex-col items-center justify-center space-y-4">
+            <div className="bg-white p-8 rounded-2xl shadow-xl border border-slate-200 flex flex-col items-center">
+              <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-4" />
+              <p className="text-slate-600 font-semibold text-lg">Processing assessment…</p>
+              <p className="text-slate-400 text-sm">Evaluating creditworthiness and risk factors</p>
+            </div>
           </div>
-        ) : viewState === 'landing' ? (
+        )}
+
+        {viewState === 'landing' ? (
           <LandingDashboard 
             onSelectMode={setViewState} 
             onSelectPersona={handleSelectDemo}
@@ -163,7 +193,7 @@ export default function App() {
                <div>
                  <h3 className={`text-xl font-bold mb-1 ${isMentorMode ? 'text-slate-200' : 'text-slate-800'}`}>{currentPersona.name || currentPersona.applicant?.full_name}</h3>
                  <p className={`text-sm font-semibold uppercase tracking-wider ${isMentorMode ? 'text-slate-500' : 'text-slate-400'}`}>Assessment Reference ID</p>
-                 <p className={`font-mono ${isMentorMode ? 'text-slate-400' : 'text-slate-600'}`}>ASMT-{currentPersona.id?.toUpperCase().replace('CUSTOM_','') || Date.now()}</p>
+                 <p className={`font-mono ${isMentorMode ? 'text-slate-400' : 'text-slate-600'}`}>ASMT-{currentPersona.id?.toUpperCase().replace('CUSTOM_','').slice(0, 12) || 'PENDING'}</p>
                </div>
                <button onClick={() => setViewState(currentPersona.original_view || (currentPersona.user_type === 'person_a' ? 'traditional_form' : 'ntc_form'))} className="text-sm font-medium text-blue-600 hover:text-blue-800 underline underline-offset-4">
                  Edit Assessment
