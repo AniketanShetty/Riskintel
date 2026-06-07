@@ -1,0 +1,40 @@
+# RiskIntel — Python Backend Dependencies
+# Install: pip install -r requirements.txt
+# Python >= 3.12 required
+
+# ── Web Framework ─────────────────────────────────────────────────────────────
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.9.0
+pydantic-settings>=2.5.0
+python-dotenv>=1.0.1
+email-validator>=2.0.0
+
+# ── Database ──────────────────────────────────────────────────────────────────
+sqlalchemy[asyncio]>=2.0.35
+alembic>=1.13.0
+
+# ── CORS ──────────────────────────────────────────────────────────────────────
+# FastAPI's built-in CORSMiddleware is used; no extra dependency needed.
+
+# ── Data Processing ───────────────────────────────────────────────────────────
+pandas>=2.2.2
+numpy>=1.26.4
+
+# ── Machine Learning ──────────────────────────────────────────────────────────
+scikit-learn>=1.5.0
+joblib>=1.4.2
+
+# ── Local Explainability (Eligibility Engine) ────────────────────────────────
+treeinterpreter>=0.2.2
+
+# ── PDF Generation ────────────────────────────────────────────────────────────
+reportlab>=4.2.2
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+pytest>=8.2.2
+pytest-asyncio>=0.24.0
+httpx>=0.27.0
+
+# ── Async SQLite for runtime + testing (canonical V1 DB) ──────────────────
+aiosqlite>=0.20.0

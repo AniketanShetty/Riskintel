@@ -1,0 +1,6 @@
+{
+    "top_feature": "cibil_score",
+    "top_feature_pct_contribution": 79.72048024436944,
+    "verdict": "WARNING",
+    "threshold_behavior": "LIKELY_SYNTHETIC_RULE"
+}

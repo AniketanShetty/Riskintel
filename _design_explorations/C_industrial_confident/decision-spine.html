@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Direction C — Editorial + Industrial Confident · Decision Spine</title>
+<style>
+  :root {
+    --ink: #0B0F14;
+    --paper: #F4F2EC;
+    --rule: rgba(11, 15, 20, 0.10);
+    --rule-strong: rgba(11, 15, 20, 0.30);
+    --accent: #7A3F0E;
+    --positive: #1F5A3D;
+    --negative: #7A1F1B;
+    --ink-80: rgba(11, 15, 20, 0.78);
+    --ink-60: rgba(11, 15, 20, 0.58);
+    --ink-40: rgba(11, 15, 20, 0.38);
+    --ink-8: rgba(11, 15, 20, 0.08);
+
+    --space-1: 4px; --space-2: 8px; --space-3: 16px; --space-4: 24px;
+    --space-5: 32px; --space-6: 48px; --space-7: 64px; --space-8: 96px; --space-9: 128px;
+
+    --type-display-size: 42px;
+    --type-display-line: 50px;
+    --type-heading-size: 26px;
+    --type-heading-line: 34px;
+    --type-subheading-size: 20px;
+    --type-subheading-line: 28px;
+    --type-body-size: 14px;
+    --type-body-line: 22px;
+    --type-body-small-size: 13px;
+    --type-body-small-line: 20px;
+    --type-data-size: 14px;
+    --type-data-line: 22px;
+    --type-mono-size: 13px;
+    --type-mono-line: 20px;
+    --type-mono-small-size: 11px;
+    --type-mono-small-line: 16px;
+
+    --font-display: 'Source Serif 4', Georgia, serif;
+    --font-body: 'IBM Plex Sans', 'Inter', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'JetBrains Mono', 'SF Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: var(--paper); }
+  body {
+    font-family: var(--font-body);
+    font-size: var(--type-body-size);
+    line-height: var(--type-body-line);
+    color: var(--ink);
+    background: var(--paper);
+    font-feature-settings: 'kern', 'liga', 'tnum';
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Industrial: 2px top rule + 2px bottom rule, more rigid grid */
+  .page {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 0 var(--space-6);
+    border-left: 1px solid var(--rule);
+    border-right: 1px solid var(--rule);
+  }
+
+  /* Top bar — monogram + nav as a single horizontal bar with rigid separators */
+  .topbar {
+    padding: 0;
+    display: grid;
+    grid-template-columns: 200px 1fr 280px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .topbar > * { padding: var(--space-4) var(--space-5); }
+  .topbar > * + * { border-left: 1px solid var(--rule-strong); }
+  .topbar-monogram {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    display: flex; align-items: center;
+  }
+  .topbar-nav { display: flex; align-items: center; gap: 0; }
+  .topbar-nav a {
+    font-family: var(--font-mono);
+    font-size: var(--type-mono-small-size);
+    color: var(--ink-60);
+    text-decoration: none;
+    padding: var(--space-2) var(--space-4);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-right: 1px solid var(--rule);
+  }
+  .topbar-nav a:last-child { border-right: none; }
+  .topbar-nav a.active { color: var(--ink); background: var(--ink-8); }
+  .topbar-right { display: flex; align-items: center; gap: var(--space-4); justify-content: flex-end; font-family: var(--font-mono); font-size: var(--type-mono-small-size); text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-60); }
+  .topbar-right .avatar {
+    width: 28px; height: 28px; border: 1.5px solid var(--ink); display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: var(--type-mono-small-size); color: var(--ink);
+  }
+
+  /* Crumb / scope — monospace, rule */
+  .scope {
+    padding: var(--space-2) var(--space-5);
+    display: flex;
+    gap: var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--type-mono-small-size);
+    color: var(--ink-60);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid var(--rule);
+    align-items: center;
+  }
+  .scope .sep { color: var(--ink-40); }
+  .scope .pill { border: 1px solid var(--ink); color: var(--ink); padding: 2px var(--space-2); }
+
+  /* Metadata strip — denser, table-like */
+  .meta-strip {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    border-bottom: 1px solid var(--rule);
+  }
+  .meta-strip > div {
+    padding: var(--space-3) var(--space-4);
+    border-right: 1px solid var(--rule);
+  }
+  .meta-strip > div:last-child { border-right: none; }
+  .meta-strip .label { font-family: var(--font-mono); font-size: var(--type-mono-small-size); color: var(--ink-40); text-transform: uppercase; letter-spacing: 0.1em; display: block; }
+  .meta-strip .val { font-family: var(--font-mono); font-size: var(--type-mono-size); color: var(--ink); font-weight: 500; }
+  .meta-strip .cid { font-family: var(--font-mono); font-size: var(--type-mono-size); color: var(--ink); border-bottom: 1px dotted var(--ink-40); cursor: pointer; }
+
+  /* Verdict hero — full-width banner with mark */
+  .hero {
+    padding: var(--space-8) var(--space-5) var(--space-7);
+    border-bottom: 2px solid var(--ink);
+    display: grid;
+    grid-template-columns: 1fr 480px;
+    gap: var(--space-7);
+    align-items: end;
+  }
+  .hero-id {
+    border-right: 1px solid var(--rule);
+    padding-right: var(--space-6);
+  }
+  .applicant-eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--type-mono-small-size);
+    color: var(--ink-40);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: var(--space-2);
+  }
+  .applicant-name {
+    font-family: var(--font-display);
+    font-size: 32px;
+    line-height: 38px;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+  }
+  .applicant-grid {
+    margin-top: var(--space-4);
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-2) var(--space-4);
+    font-family: var(--font-mono);
+    font-size: var(--type-mono-small-size);
+  }
+  .applicant-grid .k { color: var(--ink-40); text-transform: uppercase; letter-spacing: 0.08em; }
+  .applicant-grid .v { color: var(--ink); }
+
+  .hero-verdict { }
+  .verdict-eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--type-mono-small-size);
+    color: var(--ink-40);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: var(--space-3);
+  }
+  .verdict {
+    font-family: var(--font-display);
+    font-size: var(--type-display-size);
+    line-height: var(--type-display-line);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--accent);
+  }
+  .verdict-mark {
+    display: inline-block;
+    width: 10px; height: 10px;
+    background: var(--accent);
+    margin-right: var(--space-3);
+    vertical-align: 1px;
+  }
+  .prob-block {
+    margin-top: var(--space-5);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--rule);
+    font-family: var(--font-mono);
+  }
+  .prob-label { font-size: var(--type-mono-small-size); color: var(--ink-40); text-transform: uppercase; letter-spacing: 0.1em; }
+  .prob-value {
+    font-size: 28px; line-height: 36px; color: var(--ink); font-weight: 500; margin-top: var(--space-1);
+  }
+  .prob-range {
+    font-size: var(--type-mono-small-size); color: var(--ink-60); margin-top: var(--space-1);
+  }
+  .prob-track {
+    margin-top: var(--space-3);
+    height: 6px; background: var(--ink-8); position: relative;
+  }
+  .prob-fill { position: absolute; top: 0; height: 6px; background: var(--ink); left: 61%; width: 13%; }
+  .prob-center { position: absolute; top: -2px; width: 2px; height: 10px; background: var(--accent); left: 68%; }
+
+  .actions { display: flex; gap: var(--space-2); margin-top: var(--space-5); }
+  .btn {
+    font-family: var(--font-body);
+    font-size: var(--type-body-size);
+    font-weight: 500;
+    padding: var(--space-3) var(--space-5);
+    min-height: 48px;
+    min-width: 120px;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+  }
+  .btn-primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .btn-primary:hover { background: var(--accent); border-color: var(--accent); }
+  .btn-secondary { background: var(--paper); color: var(--ink); border-color: var(--ink); }
+  .btn-secondary:hover { background: var(--ink); color: var(--paper); }
+  .btn-tertiary { background: transparent; color: var(--ink); border: 1.5px solid var(--rule-strong); }
+  .btn-tertiary:hover { border-color: var(--ink); }
+
+  .override-flags { display: flex; gap: var(--space-2); margin-top: var(--space-3); }
+  .tag {
+    font-family: var(--font-mono);
+    font-size: var(--type-mono-small-size);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: var(--space-1) var(--space-2);
+    border: 1px solid var(--rule-strong);
+    color: var(--ink-60);
+  }
+  .tag.accent { border-color: var(--accent); color: var(--accent); }
+  .tag.negative { border-color: var(--negative); color: var(--negative); }
+
+  /* Sections — rigid block layout with numbered titles */
+  .section { padding: var(--space-7) var(--space-5); border-bottom: 1px solid var(--rule); }
+  .section-num-row {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: var(--space-5);
+    margin-bottom: var(--space-5);
+    align-items: baseline;
+  }
+  .section-num {
+    font-family: var(--font-mono);
+    font-size: var(--type-mono-size);
+    color: var(--ink-40);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .section-num .num { color: var(--ink); font-weight: 500; }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: var(--type-heading-size);
+    line-height: var(--type-heading-line);
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .section-sub {
+    font-family: var(--font-mono);
+    font-size: var(--type-mono-small-size);
+    color: var(--ink-60);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: var(--space-2);
+  }
+
+  /* Drivers — 3-col with technical treatment */
+  .drivers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: 1px solid var(--ink); border-left: 1px solid var(--ink); }
+  .driver { padding: var(--space-4); border-right: 1px solid var(--ink); border-bottom: 1px solid var(--ink); position: relative; }
+  .driver.largest-positive { background: rgba(122, 63, 14, 0.04); }
+  .driver.largest-negative { background: rgba(122, 31, 27, 0.04); }
+  .driver-num {
+    position: absolute; top: var(--space-2); right: var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--type-mono-small-size);
+    color: var(--ink-40);
+  }
+  .driver-num.largest-pos { color: var(--accent); font-weight: 500; }
+  .driver-num.largest-neg { color: var(--negative); font-weight: 500; }
+  .driver-name {
+    font-size: var(--type-body-size);
+    color: var(--ink);
+    font-weight: 500;
+    margin-top: var(--space-4);
+  }
+  .driver-value {
+    font-family: var(--font-mono);
+    font-size: var(--type-data-size);
+    color: var(--ink-60);
+    margin-top: var(--space-1);
+  }
+  .driver-bar {
+    height: 3px;
+    background: var(--ink-8);
+    margin-top: var(--space-3);
+    position: relative;
+  }
+  .driver-bar::after { content: ''; position: absolute; top: -1px; left: 0; height: 5px; background: var(--ink); }
+  .driver-bar.strong::after { width: 90%; background: var(--accent); }
+  .driver-bar.medium::after { width: 60%; }
+  .driver-bar.weak::after { width: 30%; }
+  .driver.largest-negative .driver-bar::after { background: var(--negative); }
+  .driver-sign {
+    font-family: var(--font-mono);
+    font-size: var(--type-mono-small-size);
+    color: var(--ink-60);
+    margin-top: var(--space-2);
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid var(--rule);
+    padding-top: var(--space-1);
+  }
+
+  /* Recommendations — 3-col with numbered cards */
+  .recs { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); }
+  .rec {
+    border: 1px solid var(--ink);
+    padding: var(--space-4);
+    position: relative;
+  }
+  .rec-num {
+    position: absolute; top: 0; right: 0;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-mono);
+    font-size: var(--type-mono-small-size);
+    padding: 2px var(--space-2);
+  }
+  .rec-text { font-size: var(--type-body-size); line-height: var(--type-body-line); color: var(--ink); }
+
+  /* Breakdown — 3-col with table-like domain blocks */
+  .breakdown { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: 2px solid var(--ink); }
+  .domain { border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: var(--space-4); }
+  .domain:nth-child(3n) { border-right: none; }
+  .domain h3 {
+    font-family: var(--font-mono);
+    font-size: var(--type-mono-small-size);
+    color: var(--ink-60);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 400;
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--ink);
+    margin-bottom: var(--space-3);
+    display: flex;
+    justify-content: space-between;
+  }
+  .domain h3 .w { color: var(--ink-40); }
+  .breakdown-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: var(--space-3);
+    padding: var(--space-1) 0;
+    border-bottom: 1px dotted var(--rule);
+    font-size: var(--type-body-small-size);
+    align-items: baseline;
+  }
+  .breakdown-row:last-child { border-bottom: none; }
+  .breakdown-row .name { color: var(--ink); }
+  .breakdown-row .val { font-family: var(--font-mono); color: var(--ink); }
+  .breakdown-row .contrib { font-family: var(--font-mono); color: var(--ink-60); min-width: 50px; text-align: right; }
+
+  /* Audit footer — table-like */
+  .audit-footer {
+    margin: var(--space-7) var(--space-5) var(--space-7);
+    border: 1.5px solid var(--ink);
+    font-family: var(--font-mono);
+    font-size: var(--type-mono-size);
+    color: var(--ink);
+  }
+  .audit-header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--type-mono-small-size);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    display: flex;
+    justify-content: space-between;
+  }
+  .audit-grid {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 0;
+  }
+  .audit-grid > div {
+    padding: var(--space-2) var(--space-4);
+    border-bottom: 1px solid var(--rule);
+  }
+  .audit-grid > div:nth-child(odd) {
+    color: var(--ink-60);
+    text-transform: uppercase;
+    font-size: var(--type-mono-small-size);
+    letter-spacing: 0.08em;
+    border-right: 1px solid var(--rule);
+    background: var(--ink-8);
+  }
+  .audit-grid .cid { border-bottom: 1px dotted var(--ink-40); cursor: pointer; }
+  .audit-grid .cid:hover { color: var(--accent); border-color: var(--accent); }
+</style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="topbar-monogram">RiskIntel</div>
+      <nav class="topbar-nav">
+        <a href="#" class="active">Decision</a>
+        <a href="#">History</a>
+        <a href="#">Settings</a>
+      </nav>
+      <div class="topbar-right">
+        <span>Connected</span>
+        <span class="avatar">AK</span>
+      </div>
+    </header>
+
+    <!-- Scope / crumb -->
+    <div class="scope">
+      <span>Decision</span><span class="sep">/</span>
+      <span>Ramesh Kumar</span><span class="sep">/</span>
+      <span class="pill">RI-20260606-B-00012</span>
+    </div>
+
+    <!-- Metadata strip: 6-cell table -->
+    <div class="meta-strip">
+      <div><span class="label">Generated</span><span class="val">2026-06-06 14:23 UTC</span></div>
+      <div><span class="label">Model</span><span class="val">readiness-v2.4.1</span></div>
+      <div><span class="label">Decision ver</span><span class="val">v1.2</span></div>
+      <div><span class="label">Schema</span><span class="val">v1.0</span></div>
+      <div><span class="label">Recommendation</span><span class="val">v1.1</span></div>
+      <div><span class="label">Correlation</span><span class="val cid">7a4f9e2b-3c81</span></div>
+    </div>
+
+    <!-- Hero: applicant left, verdict right -->
+    <section class="hero">
+      <div class="hero-id">
+        <div class="applicant-eyebrow">Applicant</div>
+        <div class="applicant-name">Ramesh Kumar</div>
+        <div class="applicant-grid">
+          <span class="k">Age</span><span class="v">42</span>
+          <span class="k">Primary</span><span class="v">Tailoring</span>
+          <span class="k">Secondary</span><span class="v">None</span>
+          <span class="k">Loan</span><span class="v">₹10,000</span>
+          <span class="k">Tenure</span><span class="v">12 mo</span>
+          <span class="k">Installments</span><span class="v">12</span>
+        </div>
+      </div>
+      <div class="hero-verdict">
+        <div class="verdict-eyebrow">Verdict</div>
+        <div class="verdict"><span class="verdict-mark"></span>Moderately Ready</div>
+        <div class="prob-block">
+          <div class="prob-label">Probability</div>
+          <div class="prob-value">0.68</div>
+          <div class="prob-range">range 0.61 – 0.74 · 90% CI</div>
+          <div class="prob-track">
+            <div class="prob-fill"></div>
+            <div class="prob-center"></div>
+          </div>
+        </div>
+        <div class="override-flags">
+          <span class="tag accent">E5 · Floor breach</span>
+          <span class="tag">Engine policy override</span>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary">Approve</button>
+          <button class="btn btn-secondary">Decline</button>
+          <button class="btn btn-tertiary">Escalate</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Drivers -->
+    <section class="section">
+      <div class="section-num-row">
+        <div class="section-num"><span class="num">02</span> / Drivers</div>
+        <div>
+          <div class="section-title">What shaped the verdict</div>
+          <div class="section-sub">Six factors ranked by absolute contribution</div>
+        </div>
+      </div>
+      <div class="drivers">
+        <div class="driver largest-positive">
+          <div class="driver-num largest-pos">+01 LP</div>
+          <div class="driver-name">Annual income vs. expenses</div>
+          <div class="driver-value">₹1,20,000 / ₹36,000</div>
+          <div class="driver-bar strong"></div>
+          <div class="driver-sign"><span>contribution</span><span>+0.214</span></div>
+        </div>
+        <div class="driver">
+          <div class="driver-num">02</div>
+          <div class="driver-name">Loan-to-income ratio</div>
+          <div class="driver-value">0.083</div>
+          <div class="driver-bar medium"></div>
+          <div class="driver-sign"><span>contribution</span><span>+0.142</span></div>
+        </div>
+        <div class="driver">
+          <div class="driver-num">03</div>
+          <div class="driver-name">Business–purpose alignment</div>
+          <div class="driver-value">Aligned</div>
+          <div class="driver-bar medium"></div>
+          <div class="driver-sign"><span>contribution</span><span>+0.110</span></div>
+        </div>
+        <div class="driver">
+          <div class="driver-num">04</div>
+          <div class="driver-name">Home ownership</div>
+          <div class="driver-value">Owned</div>
+          <div class="driver-bar weak"></div>
+          <div class="driver-sign"><span>contribution</span><span>+0.080</span></div>
+        </div>
+        <div class="driver largest-negative">
+          <div class="driver-num largest-neg">05 LN</div>
+          <div class="driver-name">Imputed income (proxy)</div>
+          <div class="driver-value">₹4,200 / mo</div>
+          <div class="driver-bar medium"></div>
+          <div class="driver-sign"><span>contribution</span><span>−0.097</span></div>
+        </div>
+        <div class="driver">
+          <div class="driver-num">06</div>
+          <div class="driver-name">Dependents per occupant</div>
+          <div class="driver-value">0.50</div>
+          <div class="driver-bar weak"></div>
+          <div class="driver-sign"><span>contribution</span><span>−0.054</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- What to do -->
+    <section class="section">
+      <div class="section-num-row">
+        <div class="section-num"><span class="num">03</span> / Action</div>
+        <div>
+          <div class="section-title">Recommendations</div>
+          <div class="section-sub">Three actions before this assessment can be closed</div>
+        </div>
+      </div>
+      <div class="recs">
+        <div class="rec">
+          <div class="rec-num">01</div>
+          <div class="rec-text">Verify the imputed monthly income against two months of bank statements before final decision.</div>
+        </div>
+        <div class="rec">
+          <div class="rec-num">02</div>
+          <div class="rec-text">Request a co-applicant or guarantor given the dependent burden is above the 0.40 threshold.</div>
+        </div>
+        <div class="rec">
+          <div class="rec-num">03</div>
+          <div class="rec-text">Offer tenure at 18 months instead of 12 to reduce the loan-to-income pressure.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Full breakdown -->
+    <section class="section">
+      <div class="section-num-row">
+        <div class="section-num"><span class="num">04</span> / Evidence</div>
+        <div>
+          <div class="section-title">Full breakdown · five readiness components</div>
+          <div class="section-sub">Every input, every contribution, every imputation</div>
+        </div>
+      </div>
+      <div class="breakdown">
+        <div class="domain">
+          <h3>Financial health <span class="w">35%</span></h3>
+          <div class="breakdown-row"><span class="name">Annual income</span><span class="val">₹1,20,000</span><span class="contrib">+0.21</span></div>
+          <div class="breakdown-row"><span class="name">Monthly expenses</span><span class="val">₹3,000</span><span class="contrib">+0.06</span></div>
+          <div class="breakdown-row"><span class="name">Loan amount</span><span class="val">₹10,000</span><span class="contrib">+0.14</span></div>
+          <div class="breakdown-row"><span class="name">Imputed income (proxy)</span><span class="val">₹4,200/mo</span><span class="contrib">−0.10</span></div>
+        </div>
+        <div class="domain">
+          <h3>Housing stability <span class="w">20%</span></h3>
+          <div class="breakdown-row"><span class="name">Home ownership</span><span class="val">Owned</span><span class="contrib">+0.08</span></div>
+          <div class="breakdown-row"><span class="name">House type</span><span class="val">T2 (semi-pucca)</span><span class="contrib">+0.04</span></div>
+          <div class="breakdown-row"><span class="name">House area</span><span class="val">450 sq ft</span><span class="contrib">+0.03</span></div>
+        </div>
+        <div class="domain">
+          <h3>Infrastructure <span class="w">15%</span></h3>
+          <div class="breakdown-row"><span class="name">Sanitary availability</span><span class="val">Yes</span><span class="contrib">+0.04</span></div>
+          <div class="breakdown-row"><span class="name">Water availability</span><span class="val">Full</span><span class="contrib">+0.03</span></div>
+        </div>
+        <div class="domain">
+          <h3>Household burden <span class="w">15%</span></h3>
+          <div class="breakdown-row"><span class="name">Young dependents</span><span class="val">2</span><span class="contrib">−0.04</span></div>
+          <div class="breakdown-row"><span class="name">Old dependents</span><span class="val">0</span><span class="contrib">0.00</span></div>
+          <div class="breakdown-row"><span class="name">Occupants</span><span class="val">4</span><span class="contrib">−0.01</span></div>
+        </div>
+        <div class="domain">
+          <h3>Business viability <span class="w">15%</span></h3>
+          <div class="breakdown-row"><span class="name">Primary business</span><span class="val">Tailoring</span><span class="contrib">+0.03</span></div>
+          <div class="breakdown-row"><span class="name">Secondary business</span><span class="val">None</span><span class="contrib">0.00</span></div>
+          <div class="breakdown-row"><span class="name">Purpose alignment</span><span class="val">Aligned</span><span class="contrib">+0.11</span></div>
+        </div>
+        <div class="domain">
+          <h3>Archetype</h3>
+          <div class="breakdown-row"><span class="name">Cluster</span><span class="val">2</span></div>
+          <div class="breakdown-row"><span class="name">Label</span><span class="val">Services</span></div>
+          <div class="breakdown-row"><span class="name">Description</span><span class="val">Micro-enterprise, partial docs</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Audit footer: table with inverted header -->
+    <footer class="audit-footer">
+      <div class="audit-header">
+        <span>Audit · decision record</span>
+        <span>RI-20260606-B-00012</span>
+      </div>
+      <div class="audit-grid">
+        <div>Model</div><div>readiness-v2.4.1 (deployed 2026-05-12)</div>
+        <div>Training data hash</div><div>a3f2…9c41</div>
+        <div>Decision version</div><div>v1.2</div>
+        <div>Request schema</div><div>v1.0</div>
+        <div>Recommendation</div><div>v1.1</div>
+        <div>Generated at</div><div>2026-06-06T14:23:11Z</div>
+        <div>Officer</div><div>Aniket K. · Loan Officer · MFI Bharat Credit Co-op</div>
+        <div>Correlation ID</div><div class="cid">7a4f9e2b-3c81-4d6a-8b12-1f5e9d3a7c4b</div>
+        <div>Institution</div><div>MFI Bharat Credit Co-operative Society Ltd.</div>
+        <div>User role</div><div>MFI Field Officer</div>
+        <div>Imputed fields</div><div>annual_income (proxy from monthly_expenses)</div>
+        <div>Override flags</div><div>OVERRIDE_E5_FLOOR_BREACH · ENGINE_POLICY_OVERRIDE</div>
+        <div>Engine statuses</div><div>E5=success · Livelihood=success · E4=success</div>
+      </div>
+    </footer>
+
+  </div>
+</body>
+</html>

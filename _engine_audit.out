@@ -1,0 +1,131 @@
+========================================================================
+E2 RISK TIER
+========================================================================
+thresholds: {
+  "P1": {
+    "condition": ">= 701",
+    "min_score": 701,
+    "description": "Low Risk"
+  },
+  "P2": {
+    "condition": ">= 669 and < 701",
+    "min_score": 669,
+    "max_score": 700,
+    "description": "Moderate Risk"
+  },
+  "P4": {
+    "condition": "<= 658",
+    "max_score": 658,
+    "description": "High Risk"
+  },
+  "P3": {
+    "condition": "fallback",
+    "description": "Elevated Risk"
+  }
+}
+
+External CIBIL dataset: (51336, 62), columns: ['PROSPECTID', 'time_since_recent_payment', 'time_since_first_deliquency', 'time_since_recent_deliquency', 'num_times_delinquent']
+Credit_Score range: 469-811
+Approved_Flag distribution: {'P2': 32199, 'P3': 7452, 'P4': 5882, 'P1': 5803}
+
+CIBIL band counts (matches the E2 P1-P4 thresholds 701/669-700/659-668/<=658):
+band
+P2    32199
+P3     6861
+P1     6392
+P4     5884
+Name: count, dtype: int64
+
+Approval rate by band:
+Approved_Flag     P1   P2     P3   P4
+band                                 
+P1             0.908  0.0  0.092  0.0
+P2             0.000  1.0  0.000  0.0
+P3             0.000  0.0  1.000  0.0
+P4             0.000  0.0  0.000  1.0
+
+P1 purity: 0.908
+
+E2 P1 = 'Low Risk'. Actual P1 cohort: 6392 rows. Of those, 'Approved' = 5803
+
+========================================================================
+E3 BORROWER ARCHETYPE (KMeans + production lookup)
+========================================================================
+Training data: External_Cibil_Dataset.csv (51336, 63)
+Features used: NETMONTHLYINCOME, AGE, Time_With_Curr_Empr, EDUCATION
+Dropped: GENDER, MARITALSTATUS, Credit_Score, Approved_Flag, all 50+ other columns
+GENDER distribution in kept rows: {'M': 45245, 'F': 6091}
+MARITALSTATUS: {'Married': 37752, 'Single': 13584}
+EDUCATION: {'GRADUATE': 16673, '12TH': 14467, 'SSC': 9276, 'UNDER GRADUATE': 5492, 'OTHERS': 2917, 'POST-GRADUATE': 2242, 'PROFESSIONAL': 269}
+
+Training script: scripts/train_borrower_archetype.py
+  - n_clusters=4, random_state=42
+  - Cluster labeling by centroid ranking: highest education='Educated Professionals', highest tenure='Highly Tenured Veterans', lowest age of remaining='Young Starters'
+  - Education Ordinal Map: 8 categories from OTHERS to PROFESSIONAL
+  - Save to: data/processed/borrower_archetype_definitions.json
+
+Rows after dropna + map: 51336
+Cluster sizes: [19963 20292 11080     1]
+Inertia: 110690
+Silhouette: 0.283
+Calinski-Harabasz: 14632
+
+Centroids (unscaled):
+   NETMONTHLYINCOME        AGE  Time_With_Curr_Empr  EDUCATION
+0      2.649950e+04  29.913374            81.110711   3.906064
+1      2.282158e+04  31.488874            87.573247   1.420289
+2      3.264534e+04  44.824547           206.231774   2.469586
+3      2.500000e+06  25.000000            35.000000   4.000000
+
+Assigned labels (per training script):
+  Cluster 3 → 'Educated Professionals': n=1, GENDER M%=100.0, mean age=25.0
+  Cluster 2 → 'Highly Tenured Veterans': n=11080, GENDER M%=87.9, mean age=44.8
+  Cluster 0 → 'Young Starters': n=19963, GENDER M%=89.3, mean age=29.9
+  Cluster 1 → 'Mid-Career Established': n=20292, GENDER M%=87.1, mean age=31.5
+
+PRODUCTION PATH: livelihood_mapper.py is a STRING LOOKUP, not the KMeans.
+Cluster labels are NOT used in production. The 4 labels in borrower_archetype_definitions.json are display-only fallbacks.
+Person A engine loads neither kmeans_model.pkl nor definitions.json.
+Person B engine does not call get_borrower_archetype at all (only E6 livelihood_mapper).
+
+========================================================================
+E5 READINESS
+========================================================================
+No ML model in models/readiness/ (empty). Pure rule-based scoring.
+models/readiness contents: ['.gitkeep']
+Implementation: backend/app/engines/readiness/readiness_engine.py — explicit weighted scoring, no model artifacts.
+Floor breach override at financial_health_score < 0.5 hard-codes band='Not Ready' regardless of other components.
+
+Training data: data/processed/readiness_data.csv (40,000 rows, Person B schema)
+Columns: ['city', 'age', 'sex', 'social_class', 'primary_business', 'secondary_business', 'annual_income', 'monthly_expenses', 'old_dependents', 'young_dependents', 'home_ownership', 'type_of_house', 'occupants_count', 'house_area', 'sanitary_availability', 'water_availability', 'loan_purpose', 'loan_tenure', 'loan_installments', 'loan_amount']
+Shape: (40000, 20)
+
+No target column. Rules are hand-coded in readiness_engine.py.
+Calibration: cannot calibrate (no ground truth to calibrate against).
+Synthetic labels: not applicable (no model).
+Fairness: social_class and sex are in the data but NOT used by the engine.
+Bands: Ready / Moderately Ready / Needs Improvement / Not Ready (hard thresholds 75/50/25).
+
+========================================================================
+E6 LIVELIHOOD
+========================================================================
+data/processed/livelihood_data.csv: 100+ one-hot macro columns, 1 row = 1 applicant
+Shape: (40000, 20)
+Columns: ['city', 'age', 'sex', 'social_class', 'primary_business', 'secondary_business', 'annual_income', 'monthly_expenses', 'old_dependents', 'young_dependents', 'home_ownership', 'type_of_house', 'occupants_count', 'house_area', 'sanitary_availability', 'water_availability', 'loan_purpose', 'loan_tenure', 'loan_installments', 'loan_amount']
+
+Implementation: backend/app/engines/livelihood/livelihood_mapper.py
+Method: pure dictionary lookup on 'primary_business' string. No model.
+6 archetypes: General Micro-Enterprise, Trade & Retail, Services, Agri-Allied, Manufacturing, Transport & Logistics
+Cluster 0 (General Micro-Enterprise) is the catch-all default when no key matches.
+Signature: only accepts a string, explicitly not the applicant dict. See mapper.py:75-77.
+
+========================================================================
+ROUTING VERIFICATION
+========================================================================
+Person A response keys: ['applicant', 'archetype', 'correlation_id', 'eligibility', 'recommendations', 'risk_tier', 'status', 'timestamp', 'user_type']
+  archetype in response: {'label': 'Young Starters', 'cluster_id': 2, 'description': 'Younger demographic, lower employment tenure, early career stage.'}
+  archetype source: unknown
+
+Person B response keys: ['applicant', 'archetype', 'correlation_id', 'readiness', 'recommendations', 'status', 'timestamp', 'user_type']
+  archetype in response: {'label': 'Services', 'description': 'Service-oriented activities including tailoring, salons, repairs, and professional services.', 'cluster_id': 2}
+  archetype source: E6 lookup

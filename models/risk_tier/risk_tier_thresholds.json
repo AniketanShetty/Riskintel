@@ -1,0 +1,19 @@
+{
+    "P1": {
+        "condition": ">= 701",
+        "min_score": 701
+    },
+    "P2": {
+        "condition": ">= 669 and < 701",
+        "min_score": 669,
+        "max_score": 700
+    },
+    "P4": {
+        "condition": "<= 658",
+        "max_score": 658
+    },
+    "P3": {
+        "condition": "fallback",
+        "description": "Default assignment for any score that does not strictly satisfy P1, P2, or P4 explicit thresholds."
+    }
+}

@@ -1,0 +1,13 @@
+Feature,Description,Business Meaning,Available Before Decision,Potential Leakage Risk,Notes
+dependents,Number of financial dependents,Monthly living expenses proxy,Yes,Low,Fair Lending / ECOA Proxy Risk (Familial Status).
+education,Education level,Income stability proxy,Yes,Low,Fair Lending / Redlining Proxy Risk.
+self_employed,Employment type flag,Income volatility indicator,Yes,Low,Standard underwriting feature.
+annual_income,Yearly earnings,Capacity to repay,Yes,Low,Standard underwriting feature.
+loan_amount,Requested principal amount,Debt burden magnitude,Yes,Low,Standard feature.
+loan_term,Duration of loan (months/years),Amortization schedule,Yes,Low,Standard feature.
+cibil_score,Credit bureau score,Applicant's creditworthiness history,Yes (At Application),High,"EXTREME RISK: Bureau scores update dynamically. If this data was pulled recently, it includes the default event of this very loan."
+residential_assets_value,Value of residential property,Collateral / Wealth,Yes,Low,Requires appraisal verification.
+commercial_assets_value,Value of commercial property,Collateral / Wealth,Yes,Low,Standard feature.
+luxury_assets_value,Value of luxury assets,Liquid or semi-liquid wealth,Yes,Low,Standard feature.
+bank_asset_value,Cash reserves in bank,Immediate liquidity,Yes,Low,Standard feature.
+loan_status,Approval/Default outcome,The Target Variable,No,FATAL,Must be dropped from X.

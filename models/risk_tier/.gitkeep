@@ -1,0 +1,8 @@
+# models/risk_tier/
+#
+# Artifacts created in Phase 4 (Risk Tier Engine):
+#   risk_tier_thresholds.json     — P1/P2/P3/P4 CIBIL score boundaries
+#                                   (derived from External_Cibil_Dataset.csv analysis)
+#
+# The Risk Tier Engine is rule-based — no .joblib model artifact is produced.
+# Only the threshold config JSON is stored here for runtime loading.

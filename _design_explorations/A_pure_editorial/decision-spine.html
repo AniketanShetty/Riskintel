@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Direction A — Pure Editorial · Decision Spine</title>
+<style>
+  :root {
+    --ink: #0E1217;
+    --paper: #F7F5F0;
+    --rule: rgba(14, 18, 23, 0.12);
+    --rule-strong: rgba(14, 18, 23, 0.24);
+    --accent: #9A5A1F;
+    --positive: #2F6B4A;
+    --negative: #8B2E2A;
+    --ink-80: rgba(14, 18, 23, 0.80);
+    --ink-60: rgba(14, 18, 23, 0.60);
+    --ink-40: rgba(14, 18, 23, 0.40);
+    --ink-8: rgba(14, 18, 23, 0.08);
+
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 16px;
+    --space-4: 24px;
+    --space-5: 32px;
+    --space-6: 48px;
+    --space-7: 64px;
+    --space-8: 96px;
+    --space-9: 128px;
+
+    --type-display-size: 44px;
+    --type-display-line: 52px;
+    --type-heading-size: 30px;
+    --type-heading-line: 40px;
+    --type-subheading-size: 22px;
+    --type-subheading-line: 32px;
+    --type-body-large-size: 17px;
+    --type-body-large-line: 26px;
+    --type-body-size: 15px;
+    --type-body-line: 24px;
+    --type-body-small-size: 14px;
+    --type-body-small-line: 22px;
+    --type-data-size: 14px;
+    --type-data-line: 22px;
+    --type-mono-size: 14px;
+    --type-mono-line: 22px;
+    --type-mono-small-size: 12px;
+    --type-mono-small-line: 18px;
+
+    --font-display: 'Source Serif 4', 'Tiempos Headline', 'GT Sectra', Georgia, serif;
+    --font-body: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Berkeley Mono', 'SF Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: var(--paper); }
+  body {
+    font-family: var(--font-body);
+    font-size: var(--type-body-size);
+    line-height: var(--type-body-line);
+    color: var(--ink);
+    background: var(--paper);
+    font-feature-settings: 'kern', 'liga';
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Page shell */
+  .page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--space-8);
+  }
+
+  /* Top bar — minimal */
+  .topbar {
+    border-bottom: 1px solid var(--rule);
+    padding: var(--space-4) 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: var(--type-mono-small-size);
+    color: var(--ink-60);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .topbar-monogram {
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .topbar-nav { display: flex; gap: var(--space-5); }
+  .topbar-nav span { letter-spacing: 0.08em; }
+  .topbar-nav .active { color: var(--ink); border-bottom: 1px solid var(--ink); padding-bottom: 2px; }
+  .topbar-right { display: flex; gap: var(--space-4); align-items: center; }
+  .conn { display: flex; gap: var(--space-2); align-items: center; }
+  .conn::before { content: ''; width: 4px; height: 4px; background: var(--ink-40); }
+
+  /* Metadata strip — sticky-feel, but in this static mock just below topbar */
+  .meta-strip {
+    border-bottom: 1px solid var(--rule);
+    padding: var(--space-2) 0;
+    display: flex;
+    gap: var(--space-5);
+    font-family: var(--font-mono);
+    font-size: var(--type-mono-size);
+    color: var(--ink-80);
+  }
+  .meta-strip > div { display: flex; gap: var(--space-2); }
+  .meta-strip .label { color: var(--ink-60); }
+  .meta-strip .cid { cursor: pointer; border-bottom: 1px dotted var(--ink-40); }
+  .meta-strip .cid:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* Applicant identity */
+  .applicant {
+    padding: var(--space-9) 0 var(--space-7);
+    border-bottom: 1px solid var(--rule);
+  }
+  .applicant-name {
+    font-family: var(--font-display);
+    font-size: var(--type-subheading-size);
+    line-height: var(--type-subheading-line);
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .applicant-details {
+    display: flex;
+    gap: var(--space-5);
+    margin-top: var(--space-3);
+    color: var(--ink-60);
+    font-size: var(--type-body-size);
+  }
+  .applicant-details span { display: flex; gap: var(--space-2); }
+  .applicant-details .k { color: var(--ink-40); font-family: var(--font-mono); font-size: var(--type-mono-small-size); text-transform: uppercase; letter-spacing: 0.08em; }
+
+  /* Verdict */
+  .verdict-block {
+    padding: var(--space-9) 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .verdict-label {
+    font-family: var(--font-mono);
+    font-size: var(--type-mono-small-size);
+    color: var(--ink-40);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: var(--space-4);
+  }
+  .verdict {
+    font-family: var(--font-display);
+    font-size: var(--type-display-size);
+    line-height: var(--type-display-line);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--accent);
+  }
+  .confidence {
+    margin-top: var(--space-4);
+    display: flex;
+    gap: var(--space-5);
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: var(--type-mono-size);
+    color: var(--ink-80);
+  }
+  .override-flags { display: flex; gap: var(--space-2); }
+  .tag {
+    font-family: var(--font-mono);
+    font-size: var(--type-mono-small-size);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: var(--space-1) var(--space-2);
+    border: 1px solid var(--rule-strong);
+    color: var(--ink-60);
+  }
+  .tag.negative { border-color: var(--negative); color: var(--negative); }
+  .tag.positive { border-color: var(--positive); color: var(--positive); }
+  .tag.accent { border-color: var(--accent); color: var(--accent); }
+
+  /* Actions */
+  .actions {
+    display: flex;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+  }
+  .btn {
+    font-family: var(--font-body);
+    font-size: var(--type-body-size);
+    font-weight: 500;
+    padding: var(--space-3) var(--space-5);
+    min-height: 56px;
+    min-width: 120px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+  }
+  .btn-primary { background: var(--ink); color: var(--paper); }
+  .btn-primary:hover { background: var(--accent); }
+  .btn-secondary { background: var(--paper); color: var(--ink); border-color: var(--ink); }
+  .btn-secondary:hover { background: var(--ink-8); }
+  .btn-tertiary { background: transparent; color: var(--ink); padding-left: 0; padding-right: 0; }
+  .btn-tertiary:hover { color: var(--accent); }
+
+  /* Section heading */
+  .section { padding: var(--space-7) 0; border-bottom: 1px solid var(--rule); }
+  .section-heading {
+    font-family: var(--font-mono);
+    font-size: var(--type-mono-small-size);
+    color: var(--ink-40);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: var(--space-5);
+  }
+
+  /* Drivers */
+  .drivers { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-7) var(--space-5); }
+  .driver { }
+  .driver-name { font-size: var(--type-body-size); color: var(--ink); }
+  .driver-value {
+    font-family: var(--font-mono);
+    font-size: var(--type-data-size);
+    color: var(--ink);
+    font-weight: 500;
+    margin-top: var(--space-1);
+  }
+  .driver-bar {
+    height: 1px;
+    background: var(--ink-12);
+    margin-top: var(--space-3);
+    position: relative;
+  }
+  .driver-bar::after {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 0;
+    height: 3px;
+    background: var(--ink);
+  }
+  .driver-bar.positive::after { background: var(--accent); }
+  .driver-bar.negative::after { background: var(--negative); }
+  .driver-bar.strong::after { width: 85%; }
+  .driver-bar.medium::after { width: 55%; }
+  .driver-bar.weak::after { width: 25%; }
+  .driver-sign {
+    font-family: var(--font-mono);
+    font-size: var(--type-mono-small-size);
+    color: var(--ink-60);
+    margin-top: var(--space-2);
+  }
+
+  /* Recommendations */
+  .recommendations { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-7) var(--space-5); }
+  .rec {
+    border-left: 1px solid var(--rule-strong);
+    padding-left: var(--space-4);
+  }
+  .rec-text { font-size: var(--type-body-size); line-height: var(--type-body-line); color: var(--ink); }
+
+  /* Breakdown */
+  .breakdown-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-5) var(--space-7);
+  }
+  .breakdown-section { }
+  .breakdown-section h3 {
+    font-family: var(--font-mono);
+    font-size: var(--type-mono-small-size);
+    color: var(--ink-60);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 400;
+    margin-bottom: var(--space-3);
+  }
+  .breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: var(--type-body-small-size);
+  }
+  .breakdown-row .name { color: var(--ink); }
+  .breakdown-row .val { font-family: var(--font-mono); color: var(--ink-80); }
+  .breakdown-row .contrib { font-family: var(--font-mono); color: var(--ink-40); margin-left: var(--space-3); }
+
+  /* Audit footer */
+  .audit-footer {
+    margin-top: var(--space-9);
+    padding: var(--space-7) 0;
+    border-top: 1px solid var(--rule);
+    font-family: var(--font-mono);
+    font-size: var(--type-mono-size);
+    color: var(--ink-80);
+    line-height: var(--type-mono-line);
+  }
+  .audit-footer .row { display: flex; gap: var(--space-5); padding: var(--space-1) 0; }
+  .audit-footer .k { color: var(--ink-40); min-width: 180px; }
+
+  /* Imprint-style typographic mark */
+  .imprint {
+    text-align: right;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--ink-40);
+    margin-top: var(--space-4);
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- Top bar: monogram + section nav -->
+    <header class="topbar">
+      <div class="topbar-monogram">RiskIntel</div>
+      <nav class="topbar-nav">
+        <span class="active">Decision</span>
+        <span>History</span>
+        <span>Settings</span>
+      </nav>
+      <div class="topbar-right">
+        <span class="conn">Connected</span>
+        <span>— AK</span>
+      </div>
+    </header>
+
+    <!-- Metadata strip -->
+    <div class="meta-strip">
+      <div><span class="label">Generated</span><span>2026-06-06 14:23:11 UTC</span></div>
+      <div><span class="label">Model</span><span>readiness-v2.4.1</span></div>
+      <div><span class="label">Decision</span><span>v1.2</span></div>
+      <div><span class="label">Schema</span><span>1.0</span></div>
+      <div><span class="label">Correlation</span><span class="cid">7a4f9e2b-3c81-4d6a-8b12-1f5e9d3a7c4b</span></div>
+    </div>
+
+    <!-- Applicant identity -->
+    <section class="applicant">
+      <div class="applicant-name">Ramesh Kumar</div>
+      <div class="applicant-details">
+        <span><span class="k">Age</span>42</span>
+        <span><span class="k">Primary</span>Tailoring</span>
+        <span><span class="k">Loan</span>₹10,000</span>
+        <span><span class="k">Tenure</span>12 mo</span>
+      </div>
+    </section>
+
+    <!-- Verdict block -->
+    <section class="verdict-block">
+      <div class="verdict-label">Verdict</div>
+      <div class="verdict">Moderately Ready</div>
+      <div class="confidence">
+        <span>0.68 probability · range 0.61–0.74 · 90% CI</span>
+        <div class="override-flags">
+          <span class="tag accent">Floor breach — financial health</span>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary">Approve</button>
+        <button class="btn btn-secondary">Decline</button>
+        <button class="btn btn-tertiary">Escalate →</button>
+      </div>
+    </section>
+
+    <!-- Top drivers -->
+    <section class="section">
+      <div class="section-heading">Top drivers — what shaped the verdict</div>
+      <div class="drivers">
+        <div class="driver">
+          <div class="driver-name">Annual income vs. expenses</div>
+          <div class="driver-value">₹1,20,000 / ₹36,000</div>
+          <div class="driver-bar positive strong"></div>
+          <div class="driver-sign">+ 0.214 contribution</div>
+        </div>
+        <div class="driver">
+          <div class="driver-name">Loan-to-income ratio</div>
+          <div class="driver-value">0.083</div>
+          <div class="driver-bar positive medium"></div>
+          <div class="driver-sign">+ 0.142 contribution</div>
+        </div>
+        <div class="driver">
+          <div class="driver-name">Home ownership</div>
+          <div class="driver-value">Owned</div>
+          <div class="driver-bar positive weak"></div>
+          <div class="driver-sign">+ 0.080 contribution</div>
+        </div>
+        <div class="driver">
+          <div class="driver-name">Imputed income (proxy)</div>
+          <div class="driver-value">₹4,200 / mo</div>
+          <div class="driver-bar negative medium"></div>
+          <div class="driver-sign">− 0.097 contribution</div>
+        </div>
+        <div class="driver">
+          <div class="driver-name">Dependents per occupant</div>
+          <div class="driver-value">0.50</div>
+          <div class="driver-bar negative weak"></div>
+          <div class="driver-sign">− 0.054 contribution</div>
+        </div>
+        <div class="driver">
+          <div class="driver-name">Business–purpose alignment</div>
+          <div class="driver-value">Aligned</div>
+          <div class="driver-bar positive medium"></div>
+          <div class="driver-sign">+ 0.110 contribution</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- What to do -->
+    <section class="section">
+      <div class="section-heading">What to do — recommendations</div>
+      <div class="recommendations">
+        <div class="rec"><div class="rec-text">Verify the imputed monthly income against two months of bank statements before final decision.</div></div>
+        <div class="rec"><div class="rec-text">Request a co-applicant or guarantor given the dependent burden is above the 0.40 threshold.</div></div>
+        <div class="rec"><div class="rec-text">Offer tenure at 18 months instead of 12 to reduce the loan-to-income pressure.</div></div>
+      </div>
+    </section>
+
+    <!-- Full breakdown -->
+    <section class="section">
+      <div class="section-heading">Full breakdown — five readiness components</div>
+      <div class="breakdown-grid">
+        <div class="breakdown-section">
+          <h3>Financial health · 35%</h3>
+          <div class="breakdown-row"><span class="name">Annual income</span><span class="val">₹1,20,000</span><span class="contrib">+0.21</span></div>
+          <div class="breakdown-row"><span class="name">Monthly expenses</span><span class="val">₹3,000</span><span class="contrib">+0.06</span></div>
+          <div class="breakdown-row"><span class="name">Loan amount</span><span class="val">₹10,000</span><span class="contrib">+0.14</span></div>
+          <div class="breakdown-row"><span class="name">Imputed income (proxy)</span><span class="val">₹4,200/mo</span><span class="contrib">−0.10</span></div>
+        </div>
+        <div class="breakdown-section">
+          <h3>Housing stability · 20%</h3>
+          <div class="breakdown-row"><span class="name">Home ownership</span><span class="val">Owned</span><span class="contrib">+0.08</span></div>
+          <div class="breakdown-row"><span class="name">House type</span><span class="val">T2 (semi-pucca)</span><span class="contrib">+0.04</span></div>
+          <div class="breakdown-row"><span class="name">House area</span><span class="val">450 sq ft</span><span class="contrib">+0.03</span></div>
+        </div>
+        <div class="breakdown-section">
+          <h3>Infrastructure access · 15%</h3>
+          <div class="breakdown-row"><span class="name">Sanitary availability</span><span class="val">Yes</span><span class="contrib">+0.04</span></div>
+          <div class="breakdown-row"><span class="name">Water availability</span><span class="val">Full</span><span class="contrib">+0.03</span></div>
+        </div>
+        <div class="breakdown-section">
+          <h3>Household burden · 15%</h3>
+          <div class="breakdown-row"><span class="name">Young dependents</span><span class="val">2</span><span class="contrib">−0.04</span></div>
+          <div class="breakdown-row"><span class="name">Old dependents</span><span class="val">0</span><span class="contrib">0.00</span></div>
+          <div class="breakdown-row"><span class="name">Occupants</span><span class="val">4</span><span class="contrib">−0.01</span></div>
+        </div>
+        <div class="breakdown-section">
+          <h3>Business viability · 15%</h3>
+          <div class="breakdown-row"><span class="name">Primary business</span><span class="val">Tailoring (Services)</span><span class="contrib">+0.03</span></div>
+          <div class="breakdown-row"><span class="name">Secondary business</span><span class="val">None</span><span class="contrib">0.00</span></div>
+          <div class="breakdown-row"><span class="name">Purpose alignment</span><span class="val">Aligned</span><span class="contrib">+0.11</span></div>
+        </div>
+        <div class="breakdown-section">
+          <h3>Borrower archetype</h3>
+          <div class="breakdown-row"><span class="name">Cluster</span><span class="val">2 — Services</span></div>
+          <div class="breakdown-row"><span class="name">Description</span><span class="val">Micro-enterprise, partial docs</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Audit footer -->
+    <footer class="audit-footer">
+      <div class="row"><span class="k">Audit · model lineage</span><span>readiness-v2.4.1 (deployed 2026-05-12, training data hash a3f2…9c41)</span></div>
+      <div class="row"><span class="k">Decision version</span><span>v1.2</span></div>
+      <div class="row"><span class="k">Request schema</span><span>v1.0</span></div>
+      <div class="row"><span class="k">Recommendation version</span><span>v1.1</span></div>
+      <div class="row"><span class="k">Generated at</span><span>2026-06-06T14:23:11Z</span></div>
+      <div class="row"><span class="k">Officer</span><span>Aniket K. · Loan Officer · MFI Bharat Credit Co-op</span></div>
+      <div class="row"><span class="k">Correlation ID</span><span>7a4f9e2b-3c81-4d6a-8b12-1f5e9d3a7c4b</span></div>
+      <div class="imprint">— end of decision —</div>
+    </footer>
+
+  </div>
+</body>
+</html>

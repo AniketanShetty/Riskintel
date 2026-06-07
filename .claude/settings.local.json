@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir C:\\\\Users\\\\anike\\\\Desktop\\\\Riskintel /B)",
+      "Bash(\"venv/Scripts/python.exe\" -m pip list)",
+      "Bash(\"venv/Scripts/python.exe\" -m pytest --collect-only)",
+      "Bash(\"venv/Scripts/python.exe\" -m pytest tests/engines --collect-only)",
+      "Bash(\"venv/Scripts/python.exe\" -m pytest tests/engines -v)",
+      "Bash(\"venv/Scripts/python.exe\" -m pytest tests/engines/test_recommendation_engine.py -v)",
+      "Bash(venv/Scripts/python.exe -c ' *)",
+      "Bash(ls legacy_archive)",
+      "Bash(ls database *)",
+      "Bash(ls database/migrations)"
+    ]
+  }
+}

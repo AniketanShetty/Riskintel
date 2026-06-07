@@ -1,0 +1,14 @@
+{
+    "timestamp_utc": "2026-06-05T16:46:40.207613+00:00",
+    "dataset_path": "C:\\Users\\anike\\Desktop\\Riskintel\\data\\processed\\eligibility_data.csv",
+    "dataset_sha256": "188c7d1bfc8448ec3caceb691261253acb1adabd79c9707899bb9acaa4f25d28",
+    "git_commit_hash": "git_not_found_or_not_repo",
+    "python_version": "3.13.13",
+    "operating_system": "Windows-11-10.0.26200-SP0",
+    "pandas_version": "2.3.2",
+    "sklearn_version": "1.7.2",
+    "scipy_version": "1.16.2",
+    "matplotlib_version": "3.10.6",
+    "script_name": "f9_permutation_importance",
+    "execution_duration_seconds": 3.4653
+}

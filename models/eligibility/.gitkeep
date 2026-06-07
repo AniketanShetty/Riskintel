@@ -1,0 +1,9 @@
+# models/eligibility/
+#
+# Artifacts created in Phase 3 (Eligibility Engine):
+#   eligibility_model.joblib      — trained RandomForestClassifier
+#   eligibility_scaler.joblib     — fitted StandardScaler (if used)
+#   eligibility_columns.json      — ordered feature list used during training
+#
+# Do not manually place files here.
+# All artifacts are written by backend/app/engines/eligibility.py train step.

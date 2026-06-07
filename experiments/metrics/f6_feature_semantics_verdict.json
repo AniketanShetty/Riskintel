@@ -1,0 +1,4 @@
+{
+    "verdict": "HIGH_LEAKAGE_RISK",
+    "high_risk_features_count": 2
+}

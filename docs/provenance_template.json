@@ -1,0 +1,13 @@
+{
+  "dataset_name": "filename.csv",
+  "source_url": "https://example.com/dataset",
+  "license": "Commercial Use Authorized",
+  "license_url": "https://example.com/license",
+  "geographic_population": "India",
+  "row_count": 0,
+  "column_count": 0,
+  "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "download_date": "2026-06-07T00:00:00Z",
+  "build_script": "scripts/prepare_data.py",
+  "build_operator": "data-engineering@example.com"
+}

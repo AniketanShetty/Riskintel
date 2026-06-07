@@ -1,0 +1,63 @@
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ===== Virtual Environments =====
+venv/
+.venv/
+env/
+
+# ===== Jupyter Notebooks =====
+.ipynb_checkpoints/
+
+# ===== IDE =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== Environment Variables =====
+.env
+.env.local
+.env.production
+
+# ===== Data (large files — track with DVC or download separately) =====
+data/raw/*.csv
+data/raw/*.xlsx
+data/raw/*.json
+data/processed/*.csv
+data/processed/*.pkl
+
+# ===== Trained Models =====
+models/*.joblib
+models/*.pkl
+models/*.h5
+
+# ===== Generated Reports =====
+reports/*.pdf
+
+# ===== Node / Frontend =====
+node_modules/
+frontend/dist/
+frontend/build/
+frontend/.env
+
+# ===== Logs =====
+*.log
+
+# ===== Misc =====
+*.bak
+*.tmp
+nul

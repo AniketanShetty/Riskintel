@@ -1,0 +1,7 @@
+{
+    "lr_cibil_auc": 0.9705532525231324,
+    "rf_cibil_auc": 0.9681015433232466,
+    "full_model_auc": 0.9987756030155148,
+    "delta_vs_full_model": 0.03067405969226822,
+    "status": "WARNING"
+}

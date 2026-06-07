@@ -1,0 +1,8 @@
+# models/readiness/
+#
+# Artifacts created in Phase 6 (Readiness Engine):
+#   readiness_weights.json        — component weights and scoring thresholds
+#   readiness_band_thresholds.json — score-to-band mapping (Ready / Moderately Ready / etc.)
+#
+# The Readiness Engine is rule-based weighted scoring — no .joblib model artifact.
+# Config JSONs are stored here for runtime loading and easy tuning.
