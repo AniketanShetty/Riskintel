@@ -8,7 +8,7 @@ export default function TraditionalAssessmentForm({ onSubmit, isMentorMode, onCa
     full_name: initialData?.full_name || '',
     annual_income: initialData?.annual_income ?? 600000,
     loan_amount: initialData?.loan_amount ?? 150000,
-    loan_term: initialData?.loan_term ?? 24,
+    loan_term: initialData?.loan_term ?? 20,
     cibil_score: initialData?.cibil_score ?? 750,
     education: initialData?.education || 'Graduate',
     self_employed: initialData?.self_employed || 'No',
@@ -20,7 +20,7 @@ export default function TraditionalAssessmentForm({ onSubmit, isMentorMode, onCa
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      ['annual_income', 'loan_amount', 'loan_term', 'cibil_score', 'dependents', 'bank_asset_value'].includes(name) 
+      [name]: ['annual_income', 'loan_amount', 'loan_term', 'cibil_score', 'dependents', 'bank_asset_value'].includes(name)
         ? (value === '' ? '' : Number(value)) 
         : value
     }));
@@ -97,7 +97,7 @@ export default function TraditionalAssessmentForm({ onSubmit, isMentorMode, onCa
           </div>
           <div>
             <label className={labelClass}>Loan Term (Months)</label>
-            <input type="number" name="loan_term" value={formData.loan_term} onChange={handleChange} min="2" max="120" required className={inputClass} />
+            <input type="number" name="loan_term" value={formData.loan_term} onChange={handleChange} min="2" max="20" required className={inputClass} />
           </div>
 
           <div>

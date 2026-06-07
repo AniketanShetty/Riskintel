@@ -151,8 +151,8 @@ export default function NTCAssessmentForm({ onSubmit, isMentorMode, onCancel, in
             <div>
               <label className={labelClass}>Dependents (Young / Old)</label>
               <div className="flex gap-2">
-                <input type="number" name="young_dependents" value={formData.young_dependents} onChange={handleChange} min="0" required className={inputClass} placeholder="Young" />
-                <input type="number" name="old_dependents" value={formData.old_dependents} onChange={handleChange} min="0" required className={inputClass} placeholder="Old" />
+                <input type="number" name="young_dependents" value={formData.young_dependents} onChange={handleChange} min="0" max="15" required className={inputClass} placeholder="Young" />
+                <input type="number" name="old_dependents" value={formData.old_dependents} onChange={handleChange} min="0" max="10" required className={inputClass} placeholder="Old" />
               </div>
             </div>
             <div>

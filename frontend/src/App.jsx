@@ -62,6 +62,7 @@ export default function App() {
         id: `custom_${Date.now()}`,
         name: payload.full_name || "Applicant",
         user_type: payload.user_type,
+        original_view: payload.user_type === 'person_a' ? 'traditional_form' : 'ntc_form',
         applicant: payload,
         ...liveAssessment
       }
@@ -92,7 +93,8 @@ export default function App() {
       
       setCurrentPersona({
         ...persona,
-        ...liveAssessment
+        ...liveAssessment,
+        original_view: persona.applicant.user_type === 'person_a' ? 'traditional_form' : 'ntc_form'
       })
       setViewState('results')
     } catch (err) {
@@ -162,7 +164,7 @@ export default function App() {
                  <p className={`text-sm font-semibold uppercase tracking-wider ${isMentorMode ? 'text-slate-500' : 'text-slate-400'}`}>Assessment Reference ID</p>
                  <p className={`font-mono ${isMentorMode ? 'text-slate-400' : 'text-slate-600'}`}>ASMT-{currentPersona.id?.toUpperCase().replace('CUSTOM_','') || Date.now()}</p>
                </div>
-               <button onClick={() => setViewState(currentPersona.user_type === 'person_a' ? 'traditional_form' : 'ntc_form')} className="text-sm font-medium text-blue-600 hover:text-blue-800 underline underline-offset-4">
+               <button onClick={() => setViewState(currentPersona.original_view || (currentPersona.user_type === 'person_a' ? 'traditional_form' : 'ntc_form'))} className="text-sm font-medium text-blue-600 hover:text-blue-800 underline underline-offset-4">
                  Edit Assessment
                </button>
             </div>
