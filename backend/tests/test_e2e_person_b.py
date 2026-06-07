@@ -75,11 +75,13 @@ def test_person_b_standard_flow(client, baseline_payload):
     assert "description" in data["archetype"]
     
     # Verify E4 structure
-    assert "recommendations" in data
-    assert "strengths" in data["recommendations"]
-    assert "improvement_areas" in data["recommendations"]
-    assert "recommendations" in data["recommendations"]
-    assert "next_steps" in data["recommendations"]
+    assert "explanation" in data
+    assert "decision_verdict" in data["explanation"]
+    assert isinstance(data["explanation"]["decision_verdict"], str)
+    assert "primary_reason" in data["explanation"]
+    assert isinstance(data["explanation"]["primary_reason"], str)
+    assert "contributing_factors" in data["explanation"]
+    assert isinstance(data["explanation"]["contributing_factors"], list)
 
     # Verify SQLite Audit Ledger
     db_path = get_db_path()

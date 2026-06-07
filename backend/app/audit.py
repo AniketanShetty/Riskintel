@@ -76,6 +76,7 @@ def init_db() -> None:
             "request_payload_hash": "TEXT",
             "user_type_original": "TEXT",
             "routing_decision": "TEXT",
+            "serialized_response_json": "TEXT",
         }
         for col, ddl_type in audit_log_additions.items():
             if col not in existing_cols:
@@ -114,8 +115,9 @@ def write_audit_record(record: Dict[str, Any]) -> None:
                 correlation_id, timestamp, api_version, request_schema_version,
                 decision_version, recommendation_version, model_lineage_bind,
                 final_verdict, engine_statuses, triggered_rule_ids, policy_override_flags,
-                request_payload_hash, user_type_original, routing_decision
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                request_payload_hash, user_type_original, routing_decision,
+                serialized_response_json
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 record.get("correlation_id"),
@@ -132,6 +134,7 @@ def write_audit_record(record: Dict[str, Any]) -> None:
                 record.get("request_payload_hash"),
                 record.get("user_type_original"),
                 routing_decision,
+                record.get("serialized_response_json"),
             )
         )
         conn.commit()

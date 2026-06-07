@@ -1,7 +1,7 @@
 [
   {
     "id": "person_a_approved",
-    "name": "Rahul Gupta (Retail Loan)",
+    "name": "Person A Approval",
     "status": "success",
     "user_type": "person_a",
     "correlation_id": "b7525615-12c5-4b72-9809-5d8ede0cafdc",
@@ -61,10 +61,10 @@
       "description": "Low Risk",
       "score_used": 750,
       "thresholds": {
-        "P1": "≥ 701",
-        "P2": "669 – 700",
-        "P3": "659 – 668",
-        "P4": "≤ 658"
+        "P1": "\u2265 701",
+        "P2": "669 \u2013 700",
+        "P3": "659 \u2013 668",
+        "P4": "\u2264 658"
       },
       "threshold_values": {
         "p1_min": 701,
@@ -94,7 +94,7 @@
         {
           "feature": "residential_assets_value",
           "value": 5600000,
-          "evidence": "Value of property you own on record: ₹56.00 lakh.",
+          "evidence": "Value of property you own on record: \u20b956.00 lakh.",
           "reason": "The property you own adds strong support to your application.",
           "improvement_advice": "Your property value is a strong anchor for your application; continue to maintain this asset.",
           "advice_type": "generic",
@@ -109,7 +109,7 @@
   },
   {
     "id": "person_a_override",
-    "name": "Priya Sharma (Home Loan)",
+    "name": "Person A Policy Override",
     "status": "success",
     "user_type": "person_a",
     "correlation_id": "3d25128d-c0a9-4f1a-9a03-69170a6a9947",
@@ -169,10 +169,10 @@
       "description": "High Risk",
       "score_used": 650,
       "thresholds": {
-        "P1": "≥ 701",
-        "P2": "669 – 700",
-        "P3": "659 – 668",
-        "P4": "≤ 658"
+        "P1": "\u2265 701",
+        "P2": "669 \u2013 700",
+        "P3": "659 \u2013 668",
+        "P4": "\u2264 658"
       },
       "threshold_values": {
         "p1_min": 701,
@@ -185,13 +185,13 @@
     },
     "explanation": {
       "decision_verdict": "Unlikely",
-      "primary_reason": "Your requested loan amount of ₹50,000 appears high relative to your yearly income of ₹96.00 lakh.",
+      "primary_reason": "Your requested loan amount of \u20b950,000 appears high relative to your yearly income of \u20b996.00 lakh.",
       "contributing_factors": [
         {
           "feature": "loan_amount",
           "value": 50000,
-          "evidence": "Requested loan amount: ₹50,000.",
-          "reason": "Your requested loan amount of ₹50,000 appears high relative to your yearly income of ₹96.00 lakh.",
+          "evidence": "Requested loan amount: \u20b950,000.",
+          "reason": "Your requested loan amount of \u20b950,000 appears high relative to your yearly income of \u20b996.00 lakh.",
           "improvement_advice": "Reducing the loan size to one that lines up more closely with your income can strengthen your profile, though no specific amount is guaranteed.",
           "advice_type": "evidence_based",
           "evidence_sources": [
@@ -204,7 +204,7 @@
           "value": "Unknown",
           "evidence": "Your credit score of 650 places you in our highest-risk credit tier (P4), which our policy requires to be declined even when other parts of the application are strong.",
           "reason": "Your application has strengths, but our policy requires a stronger credit tier than what your current credit profile demonstrates.",
-          "improvement_advice": "Your current credit tier is the reason this application cannot be approved. Improving your credit profile is the single most impactful action. Reaching the P3 tier (credit score above 658) is a meaningful milestone — once your credit score is consistently above 658, please reapply. Approval is never guaranteed by reaching any score; the policy threshold exists to protect both you and the lender.",
+          "improvement_advice": "Your current credit tier is the reason this application cannot be approved. Improving your credit profile is the single most impactful action. Reaching the P3 tier (credit score above 658) is a meaningful milestone \u2014 once your credit score is consistently above 658, please reapply. Approval is never guaranteed by reaching any score; the policy threshold exists to protect both you and the lender.",
           "advice_type": "evidence_based",
           "evidence_sources": [
             "inputs.cibil_score",
@@ -218,7 +218,7 @@
   },
   {
     "id": "person_b_ready",
-    "name": "Vikram Singh (Business Expansion)",
+    "name": "Person B Ready",
     "status": "success",
     "user_type": "person_b",
     "correlation_id": "32d88bc4-6092-425c-9607-06b4919202f3",
@@ -351,7 +351,7 @@
         {
           "feature": "financial_health",
           "value": "Unknown",
-          "evidence": "Savings and income stability score: 98. Annual income ₹800,000; monthly expenses ₹20,000.",
+          "evidence": "Savings and income stability score: 98. Annual income \u20b9800,000; monthly expenses \u20b920,000.",
           "reason": "Your savings and income stability score is 98, which indicates your income covers your expenses with room to spare.",
           "improvement_advice": "Continue to keep your business expenses well below your annual income.",
           "advice_type": "generic",
@@ -367,7 +367,7 @@
   },
   {
     "id": "person_b_misalignment",
-    "name": "Amit Patel (Crop Loan)",
+    "name": "Person B Business Misalignment",
     "status": "success",
     "user_type": "person_b",
     "correlation_id": "df6067c9-b18d-414e-aa3d-cf055a1ec5bb",
@@ -513,7 +513,7 @@
         {
           "feature": "financial_health",
           "value": "Unknown",
-          "evidence": "Savings and income stability score: 98. Annual income ₹800,000; monthly expenses ₹20,000.",
+          "evidence": "Savings and income stability score: 98. Annual income \u20b9800,000; monthly expenses \u20b920,000.",
           "reason": "Your savings and income stability score is 98, which indicates your income covers your expenses with room to spare.",
           "improvement_advice": "Continue to keep your business expenses well below your annual income.",
           "advice_type": "generic",
@@ -529,7 +529,7 @@
   },
   {
     "id": "person_b_fh_coaching",
-    "name": "Meera Devi (Business Loan)",
+    "name": "Person B Financial Health Coaching",
     "status": "success",
     "user_type": "person_b",
     "correlation_id": "845a1762-774b-4732-a62b-fe3b5c448865",

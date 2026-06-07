@@ -13,7 +13,12 @@ def generate_person_a_recommendations(inputs, eligibility_res, risk_tier_res, ar
     factors, triggered_ids = evaluate_rules(PERSON_A_RULES, ctx, max_factors=5)
     logger.info(f"Person A Assessment triggered rules: {triggered_ids}")
     
+    verdict = eligibility_res.get("verdict", "Unknown")
+    primary_reason = factors[0]["reason"] if factors else "No primary reason identified."
+    
     output = {
+        'decision_verdict': verdict,
+        'primary_reason': primary_reason,
         'contributing_factors': factors,
         'recommendation_version': RECOMMENDATION_VERSION,
         'triggered_rule_ids': triggered_ids
@@ -25,10 +30,14 @@ def generate_person_b_recommendations(inputs, readiness_res, livelihood_res):
     factors, triggered_ids = evaluate_rules(PERSON_B_RULES, ctx, max_factors=5)
     logger.info(f"Person B Assessment triggered rules: {triggered_ids}")
     
+    verdict = readiness_res.get("band", "Unknown")
+    primary_reason = factors[0]["reason"] if factors else "No primary reason identified."
+    
     output = {
+        'decision_verdict': verdict,
+        'primary_reason': primary_reason,
         'contributing_factors': factors,
         'recommendation_version': RECOMMENDATION_VERSION,
         'triggered_rule_ids': triggered_ids
     }
     return output
-

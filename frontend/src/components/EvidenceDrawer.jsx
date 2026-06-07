@@ -49,7 +49,7 @@ export default function EvidenceDrawer({ factor, response, isOpen, onToggle }) {
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center justify-between gap-2 px-4 sm:px-5 py-3 bg-slate-900 hover:bg-slate-800 transition-colors duration-150 text-[var(--color-cyan-code)] text-xs font-mono uppercase tracking-wider min-w-0"
+        className="w-full flex items-center justify-between gap-2 px-4 sm:px-5 py-3 bg-slate-800 hover:bg-slate-700 transition-colors duration-150 text-[var(--color-cyan-code)] text-xs font-mono uppercase tracking-wider min-w-0"
       >
         <span className="flex items-center gap-2 min-w-0">
           <FileSearch className="w-3.5 h-3.5 flex-shrink-0" />
@@ -61,7 +61,7 @@ export default function EvidenceDrawer({ factor, response, isOpen, onToggle }) {
         </span>
       </button>
 
-      <div className={`drawer ${isOpen ? 'open' : ''} bg-slate-ash print-color-adjust`}>
+      <div className={`drawer ${isOpen ? 'open' : ''} bg-slate-900 print-color-adjust`}>
         <div className="p-5 space-y-5 font-mono text-xs text-slate-200">
           {/* Evidence sources */}
           {sources.length > 0 ? (

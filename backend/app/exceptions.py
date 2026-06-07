@@ -31,3 +31,16 @@ class RequestValidationError(RiskIntelException):
     def __init__(self, message: str, details: list = None):
         super().__init__(message)
         self.details = details or []
+
+
+class GovernanceError(RiskIntelException):
+    """
+    Exception raised when a canonical SSOT value is missing where one is
+    required. Used as the fail-loud mechanism for threshold governance:
+    instead of silently substituting a hardcoded fallback, raise this error
+    so the missing-engine-metadata condition is detected and the request
+    is degraded (never silently miscomputed).
+    """
+    def __init__(self, message: str, governance_key: str = ""):
+        super().__init__(message)
+        self.governance_key = governance_key

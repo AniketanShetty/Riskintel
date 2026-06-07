@@ -99,7 +99,7 @@ open http://localhost:8000/docs                          # OpenAPI / Swagger UI
 ### Borrower-visible fields
 - `status`, `user_type`, `correlation_id` (envelope).
 - `routing_decision.{original_user_type, routed_to, reason}` — when NTC reroute fires.
-- `eligibility.{verdict, probability, bias, feature_contributions}` (Person A).
+- `eligibility.{verdict, probability, bias, feature_contributions, policy_override_applied}` (Person A).
 - `risk_tier.{tier, label, description, score_used, thresholds, threshold_values}` (Person A).
 - `archetype.{label, description, cluster_id, is_unclassified}` (both).
 - `readiness.{score, band, components, metadata}` (Person B). `metadata.e5_thresholds` surfaces engine SSOT.
@@ -168,6 +168,10 @@ open http://localhost:8000/docs                          # OpenAPI / Swagger UI
 **Phase 4 — frontend constitution adoption (2026-06-07)**
 - Frontend Constitution (§7). Adopted borrower coaching principles, mentor X-ray mode, scope guardrails, 5 demo personas, frozen-for-first-submission status. No backend changes; no governance rules removed; no historical sections deleted.
 - Mobile visual QA pass. Resolved 4 defects: AppHeader horizontal overflow at <=390px, brand subtitle overflow, OutcomeHero icon stacking on mobile, EvidenceDrawer button overflow. Touch targets preserved; desktop appearance unchanged; print output unchanged. 3 files modified, 14 lines net.
+
+**Phase 5 — Verified P0 fixes (2026-06-07)**
+- Relaxed `loan_amount` validation in `PersonARequest` (ge=100 → ge=1) to allow realistic NTC micro-loans.
+- Explicitly documented `eligibility.policy_override_applied` in Person A responses contract.
 
 ---
 

@@ -114,7 +114,7 @@ class TestHttpContract:
             "eligibility",
             "risk_tier",
             "archetype",
-            "recommendations",
+            "explanation",
             "correlation_id",
         ):
             assert key in body, f"missing root key: {key}"
@@ -209,24 +209,26 @@ class TestHttpContract:
         for key in ("label", "description", "cluster_id"):
             assert key in a, f"missing archetype.{key}"
 
-    def test_person_a_recommendations_keys(self, client, valid_person_a_payload):
+    def test_person_a_explanation_keys(self, client, valid_person_a_payload):
         body = client.post("/api/assess/person-a", json=valid_person_a_payload).json()
-        r = body["recommendations"]
-        for key in ("strengths", "risk_factors", "recommendations", "action_plan"):
+        r = body["explanation"]
+        for key in ("decision_verdict", "primary_reason"):
             assert key in r, f"missing recommendations.{key}"
-            assert isinstance(r[key], list), f"recommendations.{key} not list"
+            assert isinstance(r[key], str), f"recommendations.{key} not str"
+        assert "contributing_factors" in r, "missing recommendations.contributing_factors"
+        assert isinstance(r["contributing_factors"], list), "recommendations.contributing_factors not list"
 
     def test_person_a_recommendations_strengths_nonempty(
         self, client, valid_person_a_payload
     ):
         body = client.post("/api/assess/person-a", json=valid_person_a_payload).json()
-        assert len(body["recommendations"]["strengths"]) >= 1
+        assert len(body["explanation"]["contributing_factors"]) >= 1
 
     def test_person_a_recommendations_action_plan_nonempty(
         self, client, valid_person_a_payload
     ):
         body = client.post("/api/assess/person-a", json=valid_person_a_payload).json()
-        assert len(body["recommendations"]["action_plan"]) >= 1
+        assert len(body["explanation"]["contributing_factors"]) >= 1
 
     def test_person_a_correlation_id_is_uuid(self, client, valid_person_a_payload):
         body = client.post("/api/assess/person-a", json=valid_person_a_payload).json()
@@ -552,7 +554,7 @@ class TestPersonBHttpContract:
             "applicant",
             "readiness",
             "archetype",
-            "recommendations",
+            "explanation",
             "correlation_id",
         ):
             assert key in body, f"missing root key: {key}"
@@ -631,24 +633,26 @@ class TestPersonBHttpContract:
         body = client.post("/api/assess/person-b", json=valid_person_b_payload).json()
         assert len(body["archetype"]["label"]) > 0
 
-    def test_person_b_recommendations_keys(self, client, valid_person_b_payload):
+    def test_person_b_explanation_keys(self, client, valid_person_b_payload):
         body = client.post("/api/assess/person-b", json=valid_person_b_payload).json()
-        r = body["recommendations"]
-        for key in ("strengths", "improvement_areas", "recommendations", "next_steps"):
+        r = body["explanation"]
+        for key in ("decision_verdict", "primary_reason"):
             assert key in r, f"missing recommendations.{key}"
-            assert isinstance(r[key], list), f"recommendations.{key} not list"
+            assert isinstance(r[key], str), f"recommendations.{key} not str"
+        assert "contributing_factors" in r, "missing recommendations.contributing_factors"
+        assert isinstance(r["contributing_factors"], list), "recommendations.contributing_factors not list"
 
     def test_person_b_recommendations_strengths_nonempty(
         self, client, valid_person_b_payload
     ):
         body = client.post("/api/assess/person-b", json=valid_person_b_payload).json()
-        assert len(body["recommendations"]["strengths"]) >= 1
+        assert len(body["explanation"]["contributing_factors"]) >= 1
 
     def test_person_b_recommendations_next_steps_nonempty(
         self, client, valid_person_b_payload
     ):
         body = client.post("/api/assess/person-b", json=valid_person_b_payload).json()
-        assert len(body["recommendations"]["next_steps"]) >= 1
+        assert len(body["explanation"]["contributing_factors"]) >= 1
 
     def test_person_b_correlation_id_is_uuid(self, client, valid_person_b_payload):
         body = client.post("/api/assess/person-b", json=valid_person_b_payload).json()

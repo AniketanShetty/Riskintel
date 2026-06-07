@@ -47,6 +47,21 @@ function formatValue(feature, value) {
   return null
 }
 
+function translateCoachingAdvice(factor, isMentorMode) {
+  if (isMentorMode) return factor.improvement_advice;
+
+  const feature = factor.feature;
+  if (feature === 'cibil_score') return "Ensure all EMIs and credit card bills are paid on time for 6 consecutive months to build credit history.";
+  if (feature === 'loan_income_ratio') return "Consider reducing the requested loan amount or wait until your annual income increases to lower your burden.";
+  if (feature === 'financial_health') return "Maintain consistent monthly business revenues and ensure your cash flow can support regular installments.";
+  if (feature === 'infrastructure_access') return "Access to basic amenities like water and sanitation improves household stability, which supports repayment capacity.";
+  if (feature === 'housing_stability') return "Long-term residence or ownership provides stability. Continue maintaining a stable living arrangement.";
+  if (feature === 'business_viability') return "Ensure your loan purpose directly aligns with growing your primary business operations.";
+  if (feature === 'household_burden') return "Try to balance household expenses and dependents to ensure sufficient surplus income for loan repayment.";
+  
+  return factor.improvement_advice;
+}
+
 export default function FactorCard({ factor, isStrength, isMentorMode, response, defaultOpen = false }) {
   const [drawerOpen, setDrawerOpen] = useState(defaultOpen && isMentorMode)
 
@@ -60,9 +75,15 @@ export default function FactorCard({ factor, isStrength, isMentorMode, response,
   const resolved = resolveValue(factor.feature, response)
   const formatted = resolved != null ? formatValue(factor.feature, resolved) : null
 
+  const cardBg = isMentorMode ? 'bg-slate-800 border-slate-700' : `bg-white ${accentBorder}`
+  const titleColor = isMentorMode ? 'text-slate-200' : 'text-[var(--color-primary)]'
+  const textColor = isMentorMode ? 'text-slate-400' : 'text-slate-600'
+  const boxBg = isMentorMode ? 'bg-slate-900/50 border-slate-700/50' : 'bg-slate-50 border-slate-100'
+  const boxTextColor = isMentorMode ? 'text-slate-300' : 'text-slate-700'
+
   return (
     <article
-      className={`bg-white rounded-2xl shadow-sm border ${accentBorder} overflow-hidden transition-shadow duration-150 hover:shadow-md print-color-adjust`}
+      className={`rounded-2xl shadow-sm border overflow-hidden transition-shadow duration-150 hover:shadow-md print-color-adjust ${cardBg}`}
     >
       <div className={`p-6 flex gap-4 ${leftBorder}`}>
         <div
@@ -73,7 +94,7 @@ export default function FactorCard({ factor, isStrength, isMentorMode, response,
 
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2 flex-wrap">
-            <h4 className="font-semibold text-[var(--color-primary)] text-base">
+            <h4 className={`font-semibold text-base ${titleColor}`}>
               {formatFeature(factor.feature)}
             </h4>
             {formatted != null && (
@@ -83,17 +104,17 @@ export default function FactorCard({ factor, isStrength, isMentorMode, response,
             )}
           </div>
 
-          <p className="text-slate-600 mt-2 leading-relaxed text-[15px]">
+          <p className={`mt-2 leading-relaxed text-[15px] ${textColor}`}>
             {factor.reason}
           </p>
 
           {factor.improvement_advice && (
-            <div className="mt-4 p-3.5 rounded-lg bg-slate-50 border border-slate-100">
+            <div className={`mt-4 p-3.5 rounded-lg border ${boxBg}`}>
               <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">
                 {isStrength ? 'Keep doing this' : 'Action plan'}
               </p>
-              <p className="text-sm text-slate-700 leading-relaxed italic">
-                “{factor.improvement_advice}”
+              <p className={`text-sm leading-relaxed italic ${boxTextColor}`}>
+                “{translateCoachingAdvice(factor, isMentorMode)}”
               </p>
             </div>
           )}

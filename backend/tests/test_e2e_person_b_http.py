@@ -132,8 +132,8 @@ class TestPersonBHttpHappyPath:
     def test_response_contains_recommendations(self, client, baseline_payload):
         response = client.post("/api/assess/person-b", json=baseline_payload)
         body = response.json()
-        recs = body["recommendations"]
-        for key in ("strengths", "improvement_areas", "recommendations", "next_steps"):
+        recs = body["explanation"]
+        for key in ("decision_verdict", "primary_reason", "contributing_factors"):
             assert key in recs, f"missing recommendations key: {key}"
 
     def test_response_contains_applicant_echo(self, client, baseline_payload):

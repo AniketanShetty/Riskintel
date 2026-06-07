@@ -47,6 +47,17 @@ class ReadinessEngine:
         else:
             return "Needs Attention"
 
+    # ── Policy thresholds (SSOT) ────────────────────────────────────────────
+    # Module-level constants are the single source of truth for any code
+    # that needs to reference these cutoffs (e.g. recommendation rules).
+    # The engine itself and any downstream consumer MUST read from these
+    # names rather than hardcoding the values.
+    STRONG_STATUS_MIN = 70         # _determine_status "Strong" cutoff
+    SATISFACTORY_STATUS_MIN = 50   # _determine_status "Satisfactory" cutoff
+    BAND_READY_MIN = 75            # final band "Ready"
+    BAND_MODERATELY_READY_MIN = 50 # final band "Moderately Ready"
+    BAND_NEEDS_IMPROVEMENT_MIN = 25  # final band "Needs Improvement"
+
     def calculate_readiness(self, features: Dict[str, Any]) -> Dict[str, Any]:
         """
         Calculate readiness score and band based on E5 specification.
@@ -367,9 +378,11 @@ class ReadinessEngine:
         # without relying on Python's banker's-rounding behaviour at the 0.5
         # boundary.  A borrower with zero or negligible financial health is
         # unconditionally assigned "Not Ready" regardless of other components.
-        _FINANCIAL_HEALTH_FLOOR_THRESHOLD = 0.5
+        # Promoted to module-level constant so it can be surfaced via the
+        # `thresholds` SSOT block below.
+        FINANCIAL_HEALTH_FLOOR_THRESHOLD = 0.5
         is_floor_override = (
-            financial_health_score < _FINANCIAL_HEALTH_FLOOR_THRESHOLD
+            financial_health_score < FINANCIAL_HEALTH_FLOOR_THRESHOLD
         )
 
         if is_floor_override:
@@ -377,11 +390,11 @@ class ReadinessEngine:
             readiness_band = "Not Ready"
         else:
             # ── 8. Readiness Band Mapping ─────────────────────────────────────
-            if final_score >= 75:
+            if final_score >= self.BAND_READY_MIN:
                 readiness_band = "Ready"
-            elif final_score >= 50:
+            elif final_score >= self.BAND_MODERATELY_READY_MIN:
                 readiness_band = "Moderately Ready"
-            elif final_score >= 25:
+            elif final_score >= self.BAND_NEEDS_IMPROVEMENT_MIN:
                 readiness_band = "Needs Improvement"
             else:
                 readiness_band = "Not Ready"
@@ -447,13 +460,27 @@ class ReadinessEngine:
             "home_ownership_internal": home_ownership_internal
         }
 
+        # ── 11. Threshold SSOT payload ─────────────────────────────────────────
+        # The numeric cutoffs this engine consults, surfaced so downstream
+        # explanation rules and audit logs can read them from a single source
+        # rather than re-hardcoding the same literals.
+        thresholds = {
+            "financial_health_floor": float(FINANCIAL_HEALTH_FLOOR_THRESHOLD),
+            "strong_status_min": int(self.STRONG_STATUS_MIN),
+            "satisfactory_status_min": int(self.SATISFACTORY_STATUS_MIN),
+            "band_ready_min": int(self.BAND_READY_MIN),
+            "band_moderately_ready_min": int(self.BAND_MODERATELY_READY_MIN),
+            "band_needs_improvement_min": int(self.BAND_NEEDS_IMPROVEMENT_MIN),
+        }
+
         return {
             "score": final_score,
             "band": readiness_band,
             "components": components_payload,
             "mapped_features": mapped_features,
             "imputed_fields": imputed_fields,
-            "policy_override_applied": is_floor_override
+            "policy_override_applied": is_floor_override,
+            "thresholds": thresholds,
         }
 
 def get_readiness_score(features: Dict[str, Any]) -> Dict[str, Any]:

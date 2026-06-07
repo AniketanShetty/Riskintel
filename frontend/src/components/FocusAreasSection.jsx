@@ -9,7 +9,7 @@ export default function FocusAreasSection({ factors, isMentorMode, response }) {
       <header className="flex items-center gap-2">
         <span className="w-2 h-2 rounded-full bg-[var(--color-ochre)]" />
         <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-          Focus Area
+          {isMentorMode ? 'Focus Area' : 'Improvement Horizon'}
         </h3>
         <span className="text-[11px] text-slate-400 ml-1">
           {factors.length === 1 ? 'One primary' : `${factors.length} areas`}

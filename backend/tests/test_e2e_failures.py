@@ -91,8 +91,8 @@ def test_failure_non_critical_engine_crash(client, valid_person_a_payload):
          patch("app.orchestrator.get_borrower_archetype", side_effect=ValueError("Feature array mismatch")) as mock_e3, \
          patch("app.orchestrator.generate_person_a_recommendations") as mock_e4:
         mock_e1.return_value = {"verdict": "Likely", "probability": 0.75, "bias": 0.5, "feature_contributions": {"f1": 0.25}}
-        mock_e2.return_value = {"risk_tier": "P1", "tier_description": "Low Risk"}
-        mock_e4.return_value = {"strengths": ["Analysis complete."], "risk_factors": [], "recommendations": [], "action_plan": [], "triggered_rule_ids": []}
+        mock_e2.return_value = {"risk_tier": "P1", "tier_description": "Low Risk", "thresholds": {"p1_min": 701, "p2_min": 669, "p2_max": 700, "p3_min": 659, "p3_max": 668, "p4_max": 658}}
+        mock_e4.return_value = {"decision_verdict": "Likely", "primary_reason": "Mock reason", "contributing_factors": [{"feature": "mock", "value": "mock", "evidence": "mock", "reason": "mock", "improvement_advice": "mock"}], "triggered_rule_ids": ["R1"]}
         response = client.post("/api/assess", json=valid_person_a_payload)
         assert response.status_code == 200
         data = response.json()
@@ -113,9 +113,9 @@ def test_failure_audit_commit_locked(client, valid_person_a_payload):
          patch("app.orchestrator.generate_person_a_recommendations") as mock_e4, \
          patch("app.orchestrator.write_audit_record", side_effect=AuditLogError("SQLite DB is locked")):
         mock_e1.return_value = {"verdict": "Likely", "probability": 0.75, "bias": 0.5, "feature_contributions": {"f1": 0.25}}
-        mock_e2.return_value = {"risk_tier": "P1", "tier_description": "Low Risk"}
+        mock_e2.return_value = {"risk_tier": "P1", "tier_description": "Low Risk", "thresholds": {"p1_min": 701, "p2_min": 669, "p2_max": 700, "p3_min": 659, "p3_max": 668, "p4_max": 658}}
         mock_e3.return_value = {"archetype_label": "Highly Tenured Veterans", "cluster_id": 0}
-        mock_e4.return_value = {"strengths": [], "risk_factors": [], "recommendations": [], "action_plan": [], "triggered_rule_ids": []}
+        mock_e4.return_value = {"decision_verdict": "Likely", "primary_reason": "Mock reason", "contributing_factors": [{"feature": "mock", "value": "mock", "evidence": "mock", "reason": "mock", "improvement_advice": "mock"}], "triggered_rule_ids": ["R1"]}
         response = client.post("/api/assess", json=valid_person_a_payload)
         assert response.status_code == 500
         data = response.json()

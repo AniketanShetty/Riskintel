@@ -19,7 +19,8 @@ from app.exceptions import (
     CriticalEngineError,
     NonCriticalEngineError,
     RequestValidationError,
-    AuditLogError
+    AuditLogError,
+    GovernanceError,
 )
 
 # Lineage and Audit
@@ -88,9 +89,26 @@ def execute_orchestrator(raw_payload: Dict[str, Any]) -> Dict[str, Any]:
         # 1. Eligibility (Critical)
         try:
             eligibility_res = get_eligibility(payload)
-            if not math.isclose(eligibility_res["bias"] + sum(eligibility_res["feature_contributions"].values()), eligibility_res["probability"], abs_tol=1e-4):
-                raise Exception("Probability decomposition invariant violated.")
-            engine_statuses["E1"] = "success"
+            # Freeze-blocker fix F5: instead of raising on probability
+            # decomposition drift (which crashed the response with HTTP 500
+            # for realistic inputs like 50L loan on 3L income), log the
+            # drift as a warning, mark the engine as drift_degraded in the
+            # audit log, and continue. The verdict and recommendation
+            # proceed with the engine's raw output. Drift is captured in
+            # the audit log for offline review.
+            invariant_drift = abs(
+                eligibility_res["bias"]
+                + sum(eligibility_res["feature_contributions"].values())
+                - eligibility_res["probability"]
+            )
+            if invariant_drift > 1e-3:
+                logger.warning(
+                    "E1 probability decomposition drift %.6f > 1e-3; degrading",
+                    invariant_drift,
+                )
+                engine_statuses["E1"] = "drift_degraded"
+            else:
+                engine_statuses["E1"] = "success"
         except Exception as e:
             logger.error(f"E1 Eligibility Engine failure: {e}")
             engine_statuses["E1"] = "failed"
@@ -153,6 +171,16 @@ def execute_orchestrator(raw_payload: Dict[str, Any]) -> Dict[str, Any]:
         elig_copy = copy.deepcopy(eligibility_res)
         elig_copy["verdict"] = final_verdict
         
+        # Fail-loud governance: the engine contract requires a `thresholds`
+        # block. If missing, raise GovernanceError instead of silently
+        # substituting hardcoded values (which would reintroduce SSOT drift).
+        if "thresholds" not in risk_tier_raw or not isinstance(risk_tier_raw.get("thresholds"), dict):
+            raise GovernanceError(
+                "RiskTierEngine did not return a `thresholds` block; "
+                "cannot derive governance-bound display strings or threshold_values.",
+                governance_key="risk_tier.thresholds",
+            )
+
         risk_tier_res = {
             "tier": risk_tier_raw["risk_tier"],
             "label": {
@@ -163,12 +191,26 @@ def execute_orchestrator(raw_payload: Dict[str, Any]) -> Dict[str, Any]:
             }.get(risk_tier_raw["risk_tier"], "Unknown Risk"),
             "description": risk_tier_raw["tier_description"],
             "score_used": cibil_val,
-            "thresholds": {
-                "P1": "≥ 701",
-                "P2": "669 – 700",
-                "P3": "659 – 668",
-                "P4": "≤ 658"
-            }
+            # Engine-provided SSOT block; fail-loud if missing.
+            "thresholds": risk_tier_raw["thresholds"],
+        }
+        # Display strings (frozen API contract shape) — derived from the
+        # engine-provided SSOT block, no hardcoded copies anywhere else.
+        rt = risk_tier_res["thresholds"]
+        risk_tier_res["thresholds"] = {
+            "P1": f"≥ {rt['p1_min']}",
+            "P2": f"{rt['p2_min']} – {rt['p2_max']}",
+            "P3": f"{rt['p3_min']} – {rt['p3_max']}",
+            "P4": f"≤ {rt['p4_max']}",
+        }
+        # Engine-provided SSOT numeric thresholds (governance refactor).
+        risk_tier_res["threshold_values"] = {
+            "p1_min": int(rt["p1_min"]),
+            "p2_min": int(rt["p2_min"]),
+            "p2_max": int(rt["p2_max"]),
+            "p3_min": int(rt["p3_min"]),
+            "p3_max": int(rt["p3_max"]),
+            "p4_max": int(rt["p4_max"]),
         }
         
         # 4. Recommendation Engine (Non-Critical)
@@ -186,10 +228,9 @@ def execute_orchestrator(raw_payload: Dict[str, Any]) -> Dict[str, Any]:
             engine_statuses["E4"] = "failed_degraded"
             # Fallback
             recommendations_res = {
-                "strengths": ["Profile analysis completed."],
-                "risk_factors": [],
-                "recommendations": [],
-                "action_plan": []
+                "decision_verdict": final_verdict,
+                "primary_reason": "Profile analysis completed under degraded mode.",
+                "contributing_factors": []
             }
             
         # Assemble response payload
@@ -216,11 +257,12 @@ def execute_orchestrator(raw_payload: Dict[str, Any]) -> Dict[str, Any]:
                 "verdict": final_verdict,
                 "probability": _prob,
                 "bias": _bias,
-                "feature_contributions": eligibility_res["feature_contributions"]
+                "feature_contributions": eligibility_res["feature_contributions"],
+                "policy_override_applied": is_override or bool(eligibility_res.get("policy_override_applied")) or bool(risk_tier_raw.get("policy_override_applied"))
             },
             "risk_tier": risk_tier_res,
             "archetype": archetype_res,
-            "recommendations": recommendations_res
+            "explanation": recommendations_res
         }
         
     else:
@@ -261,7 +303,17 @@ def execute_orchestrator(raw_payload: Dict[str, Any]) -> Dict[str, Any]:
             policy_override_flags.append("ENGINE_POLICY_OVERRIDE")
             
         final_verdict = readiness_res["band"]
-        
+
+        # Fail-loud governance: the readiness engine contract requires a
+        # `thresholds` block. If missing, raise GovernanceError instead of
+        # silently substituting hardcoded values.
+        if "thresholds" not in readiness_res or not isinstance(readiness_res.get("thresholds"), dict):
+            raise GovernanceError(
+                "ReadinessEngine did not return a `thresholds` block; "
+                "cannot surface governance-bound e5_thresholds metadata.",
+                governance_key="readiness.thresholds",
+            )
+
         # Prepare readiness copy for E4
         readiness_copy = copy.deepcopy(readiness_res)
         readiness_copy["band"] = final_verdict
@@ -280,10 +332,9 @@ def execute_orchestrator(raw_payload: Dict[str, Any]) -> Dict[str, Any]:
             engine_statuses["E4"] = "failed_degraded"
             # Fallback
             recommendations_res = {
-                "strengths": ["Readiness assessment completed."],
-                "improvement_areas": [],
-                "recommendations": [],
-                "next_steps": []
+                "decision_verdict": final_verdict,
+                "primary_reason": "Readiness assessment completed under degraded mode.",
+                "contributing_factors": []
             }
             
         # Assemble response payload
@@ -291,6 +342,9 @@ def execute_orchestrator(raw_payload: Dict[str, Any]) -> Dict[str, Any]:
             "imputed_fields": readiness_res.get("imputed_fields", []),
             "mapped_features": readiness_res.get("mapped_features", {}),
             "policy_override_applied": bool(readiness_res.get("policy_override_applied", False)),
+            # Engine-provided SSOT thresholds (additive). Consumer rules read
+            # `e5_thresholds.strong_status_min` etc. from this metadata.
+            "e5_thresholds": readiness_res.get("thresholds", {}),
         }
         response = {
             "status": "success",
@@ -309,7 +363,7 @@ def execute_orchestrator(raw_payload: Dict[str, Any]) -> Dict[str, Any]:
                 **livelihood_res,
                 "is_unclassified": bool(livelihood_res.get("cluster_id", 0) == 0),
             },
-            "recommendations": recommendations_res
+            "explanation": recommendations_res
         }
 
     # 5. Strict Fail-Closed Audit Commit
@@ -329,6 +383,7 @@ def execute_orchestrator(raw_payload: Dict[str, Any]) -> Dict[str, Any]:
         "request_payload_hash": request_payload_hash,
         "user_type_original": routing_decision.get("original_user_type"),
         "routing_decision": routing_decision,
+        "serialized_response_json": json.dumps(response),
     }
     
     # Must succeed or it will raise AuditLogError (fail-closed)

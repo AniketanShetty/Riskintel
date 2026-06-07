@@ -105,11 +105,11 @@ def person_a_assessment():
             "description": "Younger demographic.",
             "cluster_id": 2,
         },
-        "recommendations": {
-            "strengths": ["Strong CIBIL."],
-            "risk_factors": [],
+        "explanation": {
+            "decision_verdict": "Mock", "primary_reason": "Mock", "contributing_factors": [],
+            "primary_reason": [],
             "recommendations": ["Maintain credit."],
-            "action_plan": ["Monitor score."],
+            "contributing_factors": ["Monitor score."],
         },
     }
 
@@ -161,11 +161,11 @@ def person_b_assessment():
             "description": "Small-scale retail.",
             "cluster_id": 2,
         },
-        "recommendations": {
-            "strengths": ["Owns home."],
-            "improvement_areas": ["High dependent burden."],
+        "explanation": {
+            "decision_verdict": "Mock", "primary_reason": "Mock", "contributing_factors": [],
+            "primary_reason": ["High dependent burden."],
             "recommendations": ["Diversify income."],
-            "next_steps": ["Join an SHG."],
+            "contributing_factors": ["Join an SHG."],
         },
     }
 

@@ -13,7 +13,7 @@ class PersonARequest(BaseModel):
     annual_income: int = Field(ge=0)
     dependents: int = Field(ge=0, le=5)
     cibil_score: int
-    loan_amount: int = Field(ge=300000)
+    loan_amount: int = Field(ge=1)
     loan_term: int = Field(ge=2, le=20)
     loan_purpose: Literal["home", "education", "personal", "business", "vehicle", "medical"]
     residential_assets_value: int = Field(ge=0)

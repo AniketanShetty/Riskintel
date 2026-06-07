@@ -85,9 +85,9 @@ def test_routing_person_a_standard(client, valid_person_a_payload):
          patch("app.orchestrator.generate_person_a_recommendations") as mock_e4:
          
         mock_e1.return_value = {"verdict": "Likely", "probability": 0.75, "bias": 0.5, "feature_contributions": {"f1": 0.25}}
-        mock_e2.return_value = {"risk_tier": "P1", "tier_description": "Low Risk"}
+        mock_e2.return_value = {"risk_tier": "P1", "tier_description": "Low Risk", "thresholds": {"p1_min": 701, "p2_min": 669, "p2_max": 700, "p3_min": 659, "p3_max": 668, "p4_max": 658}}
         mock_e3.return_value = {"cluster_id": 0, "archetype_label": "Highly Tenured Veterans"}
-        mock_e4.return_value = {"strengths": ["Strong CIBIL"], "risk_factors": [], "recommendations": [], "action_plan": [], "triggered_rule_ids": ["R1"]}
+        mock_e4.return_value = {"decision_verdict": "Likely", "primary_reason": "Mock reason", "contributing_factors": [{"feature": "mock", "value": "mock", "evidence": "mock", "reason": "mock", "improvement_advice": "mock"}], "triggered_rule_ids": ["R1"]}
         
         response = client.post("/api/assess/person-a", json=valid_person_a_payload)
         assert response.status_code == 200
@@ -115,10 +115,11 @@ def test_routing_ntc_reroute(client, valid_person_a_payload):
                 "household_burden": {"score": 60, "weight": 0.15, "factors": {}},
                 "business_viability": {"score": 60, "weight": 0.15, "factors": {}}
             }, 
-            "mapped_features": {}, "imputed_fields": [], "policy_override_applied": False
+            "mapped_features": {}, "imputed_fields": [], "policy_override_applied": False,
+            "thresholds": {"financial_health_floor": 0.5, "strong_status_min": 70, "satisfactory_status_min": 50, "band_ready_min": 75, "band_moderately_ready_min": 50, "band_needs_improvement_min": 25}
         }
         mock_e6.return_value = {"label": "Services", "description": "Desc", "cluster_id": 2}
-        mock_e4.return_value = {"strengths": [], "improvement_areas": [], "recommendations": [], "next_steps": [], "triggered_rule_ids": ["R2"]}
+        mock_e4.return_value = {"decision_verdict": "Likely", "primary_reason": "Mock reason", "contributing_factors": [{"feature": "mock", "value": "mock", "evidence": "mock", "reason": "mock", "improvement_advice": "mock"}], "triggered_rule_ids": ["R1"]}
         
         response = client.post("/api/assess", json=payload)
         assert response.status_code == 200
@@ -192,8 +193,8 @@ def test_exception_isolation_non_critical_e3(client, valid_person_a_payload):
          patch("app.orchestrator.generate_person_a_recommendations") as mock_e4:
          
         mock_e1.return_value = {"verdict": "Likely", "probability": 0.75, "bias": 0.5, "feature_contributions": {"f1": 0.25}}
-        mock_e2.return_value = {"risk_tier": "P1", "tier_description": "Low Risk"}
-        mock_e4.return_value = {"strengths": ["Strong CIBIL"], "risk_factors": [], "recommendations": [], "action_plan": [], "triggered_rule_ids": []}
+        mock_e2.return_value = {"risk_tier": "P1", "tier_description": "Low Risk", "thresholds": {"p1_min": 701, "p2_min": 669, "p2_max": 700, "p3_min": 659, "p3_max": 668, "p4_max": 658}}
+        mock_e4.return_value = {"decision_verdict": "Likely", "primary_reason": "Mock reason", "contributing_factors": [{"feature": "mock", "value": "mock", "evidence": "mock", "reason": "mock", "improvement_advice": "mock"}], "triggered_rule_ids": ["R1"]}
         
         response = client.post("/api/assess", json=valid_person_a_payload)
         assert response.status_code == 200
@@ -213,13 +214,18 @@ def test_conflict_resolution_e2_p4_override(client, valid_person_a_payload):
          patch("app.orchestrator.generate_person_a_recommendations") as mock_e4:
          
         mock_e1.return_value = {"verdict": "Highly Likely", "probability": 0.9, "bias": 0.5, "feature_contributions": {"f1": 0.4}}
-        mock_e2.return_value = {"risk_tier": "P4", "tier_description": "High Risk"}
+        mock_e2.return_value = {"risk_tier": "P4", "tier_description": "High Risk", "thresholds": {"p1_min": 701, "p2_min": 669, "p2_max": 700, "p3_min": 659, "p3_max": 668, "p4_max": 658}}
         mock_e3.return_value = {"cluster_id": 0, "archetype_label": "Highly Tenured Veterans"}
         
         # Capture context passed to E4
         def mock_e4_side_effect(inputs, eligibility_res, risk_tier_res, archetype_res):
             assert eligibility_res["verdict"] == "Unlikely"
-            return {"strengths": [], "risk_factors": [], "recommendations": [], "action_plan": [], "triggered_rule_ids": []}
+            return {
+                "decision_verdict": "Unlikely",
+                "primary_reason": "Mock primary reason",
+                "contributing_factors": [],
+                "triggered_rule_ids": []
+            }
             
         mock_e4.side_effect = mock_e4_side_effect
         
@@ -254,10 +260,11 @@ def test_conflict_resolution_e5_floor_breach(client, valid_person_b_payload):
                 "household_burden": {"score": 75, "weight": 0.15, "factors": {}},
                 "business_viability": {"score": 75, "weight": 0.15, "factors": {}}
             }, 
-            "mapped_features": {}, "imputed_fields": [], "policy_override_applied": True
+            "mapped_features": {}, "imputed_fields": [], "policy_override_applied": True,
+            "thresholds": {"financial_health_floor": 0.5, "strong_status_min": 70, "satisfactory_status_min": 50, "band_ready_min": 75, "band_moderately_ready_min": 50, "band_needs_improvement_min": 25}
         }
         mock_e6.return_value = {"label": "Services", "description": "Desc", "cluster_id": 2}
-        mock_e4.return_value = {"strengths": [], "improvement_areas": [], "recommendations": [], "next_steps": [], "triggered_rule_ids": []}
+        mock_e4.return_value = {"decision_verdict": "Likely", "primary_reason": "Mock reason", "contributing_factors": [{"feature": "mock", "value": "mock", "evidence": "mock", "reason": "mock", "improvement_advice": "mock"}], "triggered_rule_ids": ["R1"]}
         
         response = client.post("/api/assess", json=valid_person_b_payload)
         assert response.status_code == 200
@@ -288,9 +295,9 @@ def test_fail_closed_audit_commit(client, valid_person_a_payload):
          patch("app.orchestrator.write_audit_record", side_effect=AuditLogError("SQLite database is locked")):
          
         mock_e1.return_value = {"verdict": "Likely", "probability": 0.75, "bias": 0.5, "feature_contributions": {"f1": 0.25}}
-        mock_e2.return_value = {"risk_tier": "P1", "tier_description": "Low Risk"}
+        mock_e2.return_value = {"risk_tier": "P1", "tier_description": "Low Risk", "thresholds": {"p1_min": 701, "p2_min": 669, "p2_max": 700, "p3_min": 659, "p3_max": 668, "p4_max": 658}}
         mock_e3.return_value = {"cluster_id": 0, "archetype_label": "Highly Tenured Veterans"}
-        mock_e4.return_value = {"strengths": [], "improvement_areas": [], "recommendations": [], "next_steps": [], "triggered_rule_ids": []}
+        mock_e4.return_value = {"decision_verdict": "Likely", "primary_reason": "Mock reason", "contributing_factors": [{"feature": "mock", "value": "mock", "evidence": "mock", "reason": "mock", "improvement_advice": "mock"}], "triggered_rule_ids": ["R1"]}
         
         response = client.post("/api/assess", json=valid_person_a_payload)
         assert response.status_code == 500

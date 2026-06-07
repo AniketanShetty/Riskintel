@@ -11,3 +11,5 @@ class ExplanationRule:
     reason_template: str
     advice_template: str
     format_args_callable: Callable[[Dict[str, Any]], Dict[str, Any]]
+    advice_type: str = "generic"
+    evidence_sources: Optional[list] = None

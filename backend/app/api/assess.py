@@ -101,13 +101,26 @@ async def assess_unified(payload: UnifiedRequest):
     return _run(payload.model_dump())
 
 
-@router.post("/assess/person-a", response_model=PersonAResponse)
+@router.post("/assess/person-a")
 async def assess_person_a(payload: PersonARequest):
-    """Person A pipeline endpoint. Forces user_type=person_a."""
+    """Person A pipeline endpoint. Forces user_type=person_a.
+
+    Freeze-blocker fix F6: response_model is intentionally NOT locked to
+    PersonAResponse. The orchestrator may legitimately produce a Person B
+    response on this endpoint when NTC rerouting is triggered (cibil_score
+    in {0, -1}). A hardcoded response_model would Pydantic-reject that
+    legitimate reroute, surfacing as HTTP 500 to the borrower. Clients
+    must branch on `user_type` in the response body, the same contract
+    the unified `/api/assess` endpoint has always exposed.
+    """
     return _run(payload.model_dump())
 
 
-@router.post("/assess/person-b", response_model=PersonBResponse)
+@router.post("/assess/person-b")
 async def assess_person_b(payload: PersonBRequest):
-    """Person B pipeline endpoint. Forces user_type=person_b."""
+    """Person B pipeline endpoint. Forces user_type=person_b.
+
+    See F6 note on /assess/person-a: response_model is intentionally
+    unlocked so the orchestrator can produce the shape it actually emits.
+    """
     return _run(payload.model_dump())

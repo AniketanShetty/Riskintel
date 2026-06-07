@@ -14,8 +14,7 @@ export default function OverrideBanner() {
           Policy Override Applied
         </h3>
         <p className="text-sm text-amber-800 mt-1 leading-relaxed">
-          Final decision was affected by a governance rule. The machine learning
-          prediction was not the deciding factor in this outcome.
+          A strict banking policy floor was triggered. The standard algorithmic approval was overridden to ensure regulatory compliance.
         </p>
       </div>
     </div>
