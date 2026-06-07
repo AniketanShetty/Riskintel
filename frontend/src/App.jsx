@@ -161,6 +161,7 @@ export default function App() {
           <>
             <div className="flex justify-between items-end mb-4 print-color-adjust">
                <div>
+                 <h3 className={`text-xl font-bold mb-1 ${isMentorMode ? 'text-slate-200' : 'text-slate-800'}`}>{currentPersona.name || currentPersona.applicant?.full_name}</h3>
                  <p className={`text-sm font-semibold uppercase tracking-wider ${isMentorMode ? 'text-slate-500' : 'text-slate-400'}`}>Assessment Reference ID</p>
                  <p className={`font-mono ${isMentorMode ? 'text-slate-400' : 'text-slate-600'}`}>ASMT-{currentPersona.id?.toUpperCase().replace('CUSTOM_','') || Date.now()}</p>
                </div>
