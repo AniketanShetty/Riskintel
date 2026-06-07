@@ -1,111 +1,87 @@
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+@import "tailwindcss";
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+@theme {
+  --color-primary: #0F172A;
+  --color-bg-sand: #F9F9F7;
+  --color-sage: #166534;
+  --color-sage-light: #dcfce7;
+  --color-ochre: #92400E;
+  --color-ochre-light: #fef3c7;
+  --color-slate-ash: #1E293B;
+  --color-amber-alert: #F97316;
+  --color-cyan-code: #2DD4BF;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
 }
 
 body {
-  margin: 0;
+  background-color: var(--color-bg-sand);
+  color: var(--color-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
 
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
+/* ── Animations (4 allowed: mentor toggle, drawer, banner, hover) ───────── */
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+@keyframes slide-down {
+  from {
+    transform: translateY(-12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes drawer-open {
+  from {
+    max-height: 0;
+    opacity: 0;
+  }
+  to {
+    max-height: 1200px;
+    opacity: 1;
   }
 }
-p {
-  margin: 0;
+
+.animate-slide-down { animation: slide-down 250ms ease-out; }
+.animate-fade-in { animation: fade-in 300ms ease-in-out; }
+.animate-drawer { animation: drawer-open 220ms ease-out; }
+
+/* Mentor mode body class swap */
+body.mentor-mode {
+  background-color: var(--color-slate-ash);
+  color: #f1f5f9;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+body.mentor-mode header.app-header {
+  background-color: #0f172a;
+  color: #f1f5f9;
+  border-bottom: 1px solid #334155;
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+body.mentor-mode header.app-header h1 {
+  color: var(--color-cyan-code);
+}
+
+/* Drawer expand/collapse */
+.drawer { max-height: 0; overflow: hidden; transition: max-height 220ms ease-out; }
+.drawer.open { max-height: 1200px; }
+
+/* ── Print ──────────────────────────────────────────────────────────────── */
+
+@media print {
+  .no-print { display: none !important; }
+  body { background-color: white !important; color: #0F172A !important; }
+  body.mentor-mode { background-color: white !important; color: #0F172A !important; }
+  body.mentor-mode header.app-header { background-color: white !important; color: #0F172A !important; border: none; }
+  .drawer { max-height: none !important; }
+  @page { margin: 18mm; }
+  .print-color-adjust { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
 }

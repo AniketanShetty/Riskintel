@@ -1,0 +1,209 @@
+[
+  {
+    "id": "person_a_approved",
+    "name": "Arun Kumar (Credit History, Approved)",
+    "status": "success",
+    "user_type": "person_a",
+    "correlation_id": "c8a4f10e-001",
+    "timestamp": "2026-06-07T10:00:00Z",
+    "routing_decision": {
+      "original_user_type": "person_a",
+      "routed_to": "person_a",
+      "reason": "standard_person_a_pipeline"
+    },
+    "applicant": {
+      "loan_amount": 50000,
+      "annual_income": 300000,
+      "cibil_score": 750
+    },
+    "eligibility": {
+      "verdict": "Highly Likely",
+      "policy_override_applied": false
+    },
+    "risk_tier": {
+      "tier": "P1",
+      "label": "Low Risk",
+      "threshold_values": { "p1_min": 701, "p2_min": 669, "p2_max": 700, "p3_min": 659, "p3_max": 668, "p4_max": 658 }
+    },
+    "explanation": {
+      "decision_verdict": "Highly Likely",
+      "primary_reason": "Your credit score shows a strong history of repaying on time.",
+      "contributing_factors": [
+        {
+          "feature": "cibil_score",
+          "value": 750,
+          "evidence": "Your current credit score is 750.",
+          "reason": "Your credit score shows a strong history of repaying on time, placing you in our premium band.",
+          "improvement_advice": "Keep your credit use steady and continue paying on time to stay in the premium band.",
+          "advice_type": "evidence_based",
+          "evidence_sources": ["inputs.cibil_score", "risk_tier.threshold_values.p1_min"],
+          "is_strength": true
+        },
+        {
+          "feature": "loan_amount",
+          "value": 50000,
+          "evidence": "Your requested loan amount is ₹50,000.",
+          "reason": "This is well within our typical limits for your income tier.",
+          "improvement_advice": "No changes needed here.",
+          "advice_type": "evidence_based",
+          "evidence_sources": ["inputs.loan_amount"],
+          "is_strength": true
+        }
+      ]
+    }
+  },
+  {
+    "id": "person_a_override",
+    "name": "Priya Sharma (Credit History, Policy Override)",
+    "status": "success",
+    "user_type": "person_a",
+    "correlation_id": "c8a4f10e-002",
+    "timestamp": "2026-06-07T10:05:00Z",
+    "routing_decision": {
+      "original_user_type": "person_a",
+      "routed_to": "person_a",
+      "reason": "standard_person_a_pipeline"
+    },
+    "applicant": {
+      "loan_amount": 50000,
+      "annual_income": 300000,
+      "cibil_score": 650
+    },
+    "eligibility": {
+      "verdict": "Unlikely",
+      "policy_override_applied": true
+    },
+    "risk_tier": {
+      "tier": "P4",
+      "label": "High Risk",
+      "threshold_values": { "p1_min": 701, "p2_min": 669, "p2_max": 700, "p3_min": 659, "p3_max": 668, "p4_max": 658 }
+    },
+    "explanation": {
+      "decision_verdict": "Unlikely",
+      "primary_reason": "Your application has strengths, but our policy requires a stronger credit tier.",
+      "contributing_factors": [
+        {
+          "feature": "cibil_score",
+          "value": 650,
+          "evidence": "Your current credit score is 650.",
+          "reason": "Your application has strengths, but our policy requires a stronger credit tier than what your current credit profile demonstrates.",
+          "improvement_advice": "Improving your credit profile over time can lower the perceived risk, though reaching 659 does not guarantee approval.",
+          "advice_type": "evidence_based",
+          "evidence_sources": ["inputs.cibil_score", "risk_tier.tier", "risk_tier.threshold_values.p3_min"],
+          "is_strength": false
+        }
+      ]
+    }
+  },
+  {
+    "id": "person_b_ready",
+    "name": "Vikram Singh (First-Time Borrower, Ready)",
+    "status": "success",
+    "user_type": "person_b",
+    "correlation_id": "c8a4f10e-003",
+    "timestamp": "2026-06-07T10:10:00Z",
+    "routing_decision": {
+      "original_user_type": "person_b",
+      "routed_to": "person_b",
+      "reason": "user_type_person_b_or_cibil_absent"
+    },
+    "applicant": {
+      "business_type": "Retail",
+      "monthly_income": 40000
+    },
+    "readiness": {
+      "score": 85,
+      "band": "Ready",
+      "components": {
+        "financial_health": { "score": 90 },
+        "housing_stability": { "score": 80 }
+      },
+      "metadata": {
+        "policy_override_applied": false,
+        "imputed_fields": [],
+        "e5_thresholds": {
+          "strong_status_min": 70,
+          "band_ready_min": 75,
+          "financial_health_floor_threshold": 0.5
+        }
+      }
+    },
+    "explanation": {
+      "decision_verdict": "Ready",
+      "primary_reason": "Your overall readiness shows strong ability to take on a loan.",
+      "contributing_factors": [
+        {
+          "feature": "financial_health",
+          "value": "Unknown",
+          "evidence": "Your savings and income stability score is 90.",
+          "reason": "Your income is comfortably higher than your expenses, showing strong financial stability.",
+          "improvement_advice": "Continue to keep your business expenses well below your annual income.",
+          "advice_type": "evidence_based",
+          "evidence_sources": ["readiness.components.financial_health.score"],
+          "is_strength": true
+        }
+      ]
+    }
+  },
+  {
+    "id": "person_b_override",
+    "name": "Meera Patel (First-Time Borrower, Floor Veto)",
+    "status": "success",
+    "user_type": "person_b",
+    "correlation_id": "c8a4f10e-004",
+    "timestamp": "2026-06-07T10:15:00Z",
+    "routing_decision": {
+      "original_user_type": "person_a",
+      "routed_to": "person_b",
+      "reason": "cibil_absent_or_sentinel"
+    },
+    "applicant": {
+      "business_type": "Agriculture",
+      "monthly_income": 5000,
+      "monthly_expenses": 6000
+    },
+    "readiness": {
+      "score": 0,
+      "band": "Not Ready",
+      "components": {
+        "financial_health": { "score": 0 },
+        "business_viability": { "score": 80 }
+      },
+      "metadata": {
+        "policy_override_applied": true,
+        "imputed_fields": ["house_area"],
+        "e5_thresholds": {
+          "strong_status_min": 70,
+          "band_ready_min": 75,
+          "financial_health_floor_threshold": 0.5
+        }
+      }
+    },
+    "explanation": {
+      "decision_verdict": "Not Ready",
+      "primary_reason": "A minimum level of financial health is required before other components can be considered.",
+      "contributing_factors": [
+        {
+          "feature": "financial_health",
+          "value": "Unknown",
+          "evidence": "Your savings and income stability score is 0.",
+          "reason": "Profiles with a score above 70 generally show a stronger ability to repay comfortably.",
+          "improvement_advice": "Building a savings buffer and steadying your monthly cash flow can raise this score over time.",
+          "advice_type": "evidence_based",
+          "evidence_sources": ["readiness.components.financial_health.score", "readiness.metadata.e5_thresholds.strong_status_min"],
+          "is_strength": false
+        },
+        {
+          "feature": "business_viability",
+          "value": "Unknown",
+          "evidence": "Your business stability score is 80.",
+          "reason": "Your overall readiness shows strong ability to take on a loan and stable business operations.",
+          "improvement_advice": "Keep up your current habits to stay eligible.",
+          "advice_type": "evidence_based",
+          "evidence_sources": ["readiness.components.business_viability.score"],
+          "is_strength": true
+        }
+      ]
+    }
+  }
+]
