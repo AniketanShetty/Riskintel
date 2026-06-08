@@ -84,7 +84,7 @@ export default function DecisionTimeline({ response, isMentorMode }) {
   });
 
   return (
-    <div className="bg-slate-800 rounded-2xl p-6 mb-8 border border-slate-700 shadow-sm text-slate-200">
+    <div className="bg-slate-800 rounded-2xl p-6 mb-8 border border-slate-700 shadow-sm text-slate-200 no-print">
       <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Decision Traceability Timeline</h3>
       <div className="flex flex-wrap items-center gap-y-3">
         {steps.map((step, idx) => (

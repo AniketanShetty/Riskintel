@@ -195,7 +195,7 @@ export default function App() {
                  <p className={`text-sm font-semibold uppercase tracking-wider ${isMentorMode ? 'text-slate-500' : 'text-slate-400'}`}>Assessment Reference ID</p>
                  <p className={`font-mono ${isMentorMode ? 'text-slate-400' : 'text-slate-600'}`}>ASMT-{currentPersona.id?.toUpperCase().replace('CUSTOM_','').slice(0, 12) || 'PENDING'}</p>
                </div>
-               <button onClick={() => setViewState(currentPersona.original_view || (currentPersona.user_type === 'person_a' ? 'traditional_form' : 'ntc_form'))} className="text-sm font-medium text-blue-600 hover:text-blue-800 underline underline-offset-4">
+               <button onClick={() => setViewState(currentPersona.original_view || (currentPersona.user_type === 'person_a' ? 'traditional_form' : 'ntc_form'))} className="text-sm font-medium text-blue-600 hover:text-blue-800 underline underline-offset-4 no-print">
                  Edit Assessment
                </button>
             </div>
@@ -237,7 +237,10 @@ export default function App() {
 }
 
 function NTCRoutingBanner({ response }) {
-  if (!response || response.routing_decision?.routed_to !== 'person_b') return null;
+  const isRerouted = response?.routing_decision?.original_user_type === 'person_a' &&
+                    response?.routing_decision?.routed_to === 'person_b';
+
+  if (!isRerouted) return null;
   return (
     <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex gap-4 items-start print-color-adjust">
       <div className="flex-shrink-0 mt-0.5">
