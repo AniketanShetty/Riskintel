@@ -1,6 +1,6 @@
 # RiskIntel Project State
 
-**Last updated:** 2026-06-07 · **Phase:** V1 Closed · **Tests:** 315 / 315 pass · **Freeze status:** FROZEN FOR FIRST SUBMISSION (post-frontend-constitution)
+**Last updated:** 2026-06-10 · **Phase:** V2 Guardrails Implementation · **Tests:** 323 / 323 pass · **Freeze status:** FROZEN FOR FIRST SUBMISSION (post-frontend-constitution)
 
 ---
 
@@ -49,7 +49,7 @@ Explainable AI underwriting for microfinance. Two pipelines (Person A — credit
 ### Test commands
 ```bash
 cd backend
-./venv/Scripts/python.exe -m pytest tests/ -q          # 315 / 315 expected
+./venv/Scripts/python.exe -m pytest tests/ -q          # 323 / 323 expected
 ```
 
 ### Run commands
@@ -84,13 +84,13 @@ open http://localhost:8000/docs                          # OpenAPI / Swagger UI
 
 | Field | Value |
 |---|---|
-| **Date** | 2026-06-07 |
-| **Phase** | V1 Closed (pre-freeze remediation complete) |
+| **Date** | 2026-06-10 |
+| **Phase** | V2 Guardrails Implementation (Person A & B Guardrails Complete) |
 | **Freeze status** | FROZEN FOR FIRST SUBMISSION (Frontend Constitution adopted 2026-06-07; see §7) |
 | **Current blockers** | None |
-| **Current risks** | (1) A-RISK-001 verdict-polarity gap: "loan amount high" advice can fire on positive verdicts. (2) 1-point CIBIL cliff at 658→659 / 700→701: material experience difference, but neither side is ungrounded post-F1. (3) `infrastructure_access` and `household_burden` never appear in any factor list — silent components. All three are documented in Change Log; none is a V1 contradiction. |
-| **Next action** | V1 frozen for first submission. Recommended polish: A-RISK-001 verdict-polarity guard, near-threshold rules (A-NEAR-001 / B-NEAR-001), B-STR-003 text rewrite. V2 candidates: `ImprovementAdvice`, `benchmark`, `severity` schema fields; 7 audit-metadata fields on response; `archetype.label` for NTC; `value: "Unknown"` display normalization; eligibility monotonicity review. |
-| **Test status** | 315 / 315 pass post-F1..F6 freeze-blocker remediation + readiness-recommendation consistency fix. |
+| **Current risks** | (1) A-RISK-001 verdict-polarity gap. (2) 1-point CIBIL cliff at 658→659. (3) `infrastructure_access` and `household_burden` silent components. (4) E1 dataset failed forensic audit. (5) `Loan_Default1.csv` failed Domain Alignment Audit. |
+| **Next action** | Execute Option B Architecture: Demote the E1 ML pipeline and build a deterministic Unified Scorecard (Person A + Person B). Implement the Optimization Engine with Utility-Aware logic and the 'Pending Verification' freeze protocol for unverified cash borrowers. |
+| **Test status** | 323 / 323 pass. |
 
 ---
 
@@ -264,3 +264,15 @@ A mentor should be able to:
 
 ## Open Questions
 - **run.py convention** (V2 candidate): remove in favor of Makefile / `uvicorn` CLI, or keep as the canonical entry point?
+## AI OPERATING RULES
+
+1. Read PROJECT_STATE first.
+2. Read DECISIONS second.
+3. Read BACKLOG third.
+4. Ignore archive unless explicitly asked.
+5. Repository reality overrides docs.
+6. Unknown = UNKNOWN.
+7. Never assume.
+8. Update PROJECT_STATE after major changes.
+9. Update DECISIONS after architectural changes.
+10. Update BACKLOG after sprint completion.

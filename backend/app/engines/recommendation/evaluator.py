@@ -20,8 +20,10 @@ def evaluate_rules(rules: List[ExplanationRule], context: Dict[str, Any], max_fa
                 advice = rule.advice_template.format(**fmt_args)
                 evidence = rule.evidence_callable(context)
 
-                # Fetch value from inputs
-                value = context.get('inputs', {}).get(rule.feature_name, "Unknown")
+                # Fetch value from inputs or readiness components
+                value = context.get('inputs', {}).get(rule.feature_name)
+                if value is None:
+                    value = context.get('readiness', {}).get('components', {}).get(rule.feature_name, {}).get('score', "Unknown")
 
                 factor_dict = {
                     "feature": rule.feature_name,
@@ -69,7 +71,9 @@ def evaluate_rules(rules: List[ExplanationRule], context: Dict[str, Any], max_fa
                     advice = rule.advice_template.format(**fmt_args)
                     evidence = rule.evidence_callable(context)
 
-                    value = context.get('inputs', {}).get(rule.feature_name, "Unknown")
+                    value = context.get('inputs', {}).get(rule.feature_name)
+                    if value is None:
+                        value = context.get('readiness', {}).get('components', {}).get(rule.feature_name, {}).get('score', "Unknown")
 
                     factor_dict = {
                         "feature": rule.feature_name,

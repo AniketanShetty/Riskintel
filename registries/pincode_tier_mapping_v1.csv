@@ -1,0 +1,8 @@
+pincode,tier
+110001,1
+110002,1
+122001,2
+400001,1
+411001,2
+700001,3
+# ADR-024 §5 enforces PINCODE_DEFAULT_TIER = 1 for unknown mappings.

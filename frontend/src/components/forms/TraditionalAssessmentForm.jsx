@@ -8,7 +8,7 @@ export default function TraditionalAssessmentForm({ onSubmit, isMentorMode, onCa
     full_name: initialData?.full_name || '',
     annual_income: initialData?.annual_income ?? 600000,
     loan_amount: initialData?.loan_amount ?? 150000,
-    loan_term: initialData?.loan_term ?? 24,
+    loan_term: initialData?.loan_term ?? 20,
     cibil_score: initialData?.cibil_score ?? 750,
     education: initialData?.education || 'Graduate',
     self_employed: initialData?.self_employed || 'No',
@@ -18,10 +18,18 @@ export default function TraditionalAssessmentForm({ onSubmit, isMentorMode, onCa
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
     setFormData(prev => ({
       ...prev,
-      ['annual_income', 'loan_amount', 'loan_term', 'cibil_score', 'dependents', 'bank_asset_value'].includes(name) 
-        ? (value === '' ? '' : Number(value)) 
+      [name]: [
+        'annual_income',
+        'loan_amount',
+        'loan_term',
+        'cibil_score',
+        'dependents',
+        'bank_asset_value'
+      ].includes(name)
+        ? (value === '' ? '' : Number(value))
         : value
     }));
   };
@@ -30,7 +38,7 @@ export default function TraditionalAssessmentForm({ onSubmit, isMentorMode, onCa
     e.preventDefault();
     setLoading(true);
     setError(null);
-    
+
     // Inject hidden defaults required by PersonARequest
     const payload = {
       ...formData,
@@ -54,11 +62,10 @@ export default function TraditionalAssessmentForm({ onSubmit, isMentorMode, onCa
     }
   };
 
-  const inputClass = `w-full p-3 rounded-xl border outline-none transition-colors ${
-    isMentorMode 
-      ? 'bg-slate-900 border-slate-700 text-slate-100 focus:border-blue-500' 
-      : 'bg-white border-slate-200 text-slate-900 focus:border-blue-500'
-  }`;
+  const inputClass = `w-full p-3 rounded-xl border outline-none transition-colors ${isMentorMode
+    ? 'bg-slate-900 border-slate-700 text-slate-100 focus:border-blue-500'
+    : 'bg-white border-slate-200 text-slate-900 focus:border-blue-500'
+    }`;
 
   const labelClass = `block text-sm font-medium mb-1 ${isMentorMode ? 'text-slate-300' : 'text-slate-700'}`;
 
@@ -90,14 +97,14 @@ export default function TraditionalAssessmentForm({ onSubmit, isMentorMode, onCa
             <input type="number" name="cibil_score" value={formData.cibil_score} onChange={handleChange} min="0" max="900" required className={inputClass} />
             <p className="text-xs text-slate-400 mt-1">Enter 0 to simulate New-To-Credit re-routing.</p>
           </div>
-          
+
           <div>
             <label className={labelClass}>Loan Amount (₹)</label>
             <input type="number" name="loan_amount" value={formData.loan_amount} onChange={handleChange} min="1" required className={inputClass} />
           </div>
           <div>
             <label className={labelClass}>Loan Term (Months)</label>
-            <input type="number" name="loan_term" value={formData.loan_term} onChange={handleChange} min="2" max="120" required className={inputClass} />
+            <input type="number" name="loan_term" value={formData.loan_term} onChange={handleChange} min="2" max="20" required className={inputClass} />
           </div>
 
           <div>
@@ -114,7 +121,7 @@ export default function TraditionalAssessmentForm({ onSubmit, isMentorMode, onCa
               <option value="No">No</option>
             </select>
           </div>
-          
+
           <div>
             <label className={labelClass}>Dependents</label>
             <input type="number" name="dependents" value={formData.dependents} onChange={handleChange} min="0" max="5" required className={inputClass} />

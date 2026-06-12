@@ -18,7 +18,7 @@ Person B has no meaningful credit history and no reliable bureau score. The form
 
 No credit-bureau fields are collected. No approval probability is generated. The system assesses **readiness**, not **creditworthiness**.
 
-Fields are designed to be accessible to rural and semi-urban applicants with limited financial literacy. Labels use plain language. Infrastructure fields use checkboxes rather than requiring exact values.
+*Note: Per V2 Constitution, exact numeric income, monthly expenses, direct dependent counting, and sole earner status are explicitly banned. Income is collected as a broad bracket for Triage, expenses are derived via Pincode baseline. Age is strictly derived via KYC, not manual input.*
 
 ---
 
@@ -29,8 +29,6 @@ Fields are designed to be accessible to rural and semi-urban applicants with lim
 | # | User Label | Internal Name | Data Type | Required | Validation Rules | Example Value | Dataset Source | Used By |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | 1 | Full Name | `full_name` | String | Required | Min 2 chars, max 100 chars. Letters, spaces, periods only. | Ramesh Kumar | — (report only) | PDF Report Engine |
-| 2 | Age | `age` | Integer | Required | Min: 18, Max: 70 | 42 | Dataset B: `age` | Readiness, Archetype |
-| 3 | Gender | `gender` | Select | Required | Allowed: `male`, `female`, `other` | male | Dataset B: `sex` | Readiness, Archetype |
 
 ---
 
@@ -38,10 +36,7 @@ Fields are designed to be accessible to rural and semi-urban applicants with lim
 
 | # | User Label | Internal Name | Data Type | Required | Validation Rules | Example Value | Dataset Source | Used By |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 4 | Primary Occupation / Business | `primary_business` | Select | Required | Allowed: `agriculture`, `livestock`, `retail_shop`, `handicrafts`, `food_processing`, `transport`, `services`, `daily_wage`, `other` | agriculture | Dataset B: `primary_business` | Readiness, Archetype, Recommendation |
-| 5 | Secondary Income Source | `secondary_business` | Select | Optional | Allowed: `agriculture`, `livestock`, `retail_shop`, `handicrafts`, `food_processing`, `transport`, `services`, `daily_wage`, `none`, `other` | livestock | Dataset B: `secondary_business` | Readiness, Archetype |
-| 6 | Annual Household Income | `annual_income` | Integer | Required | Min: 0, Max: 5,000,000 | 120000 | Dataset B: `annual_income` | Readiness, Archetype, Recommendation |
-| 7 | Average Monthly Expenses | `monthly_expenses` | Integer | Required | Min: 0, Max: 500,000 | 8000 | Dataset B: `monthly_expenses` | Readiness, Recommendation |
+| 2 | Income Bracket | `income_bracket` | Select | Required | Standard predefined ranges. | 10k-20k | Intake | Triage Engine |
 
 ---
 
@@ -49,38 +44,30 @@ Fields are designed to be accessible to rural and semi-urban applicants with lim
 
 | # | User Label | Internal Name | Data Type | Required | Validation Rules | Example Value | Dataset Source | Used By |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 8 | Loan Amount Requested | `loan_amount` | Integer | Required | Min: 1,000, Max: 5,000,000 | 50000 | Dataset B: `loan_amount` | Readiness, Recommendation |
-| 9 | Loan Purpose | `loan_purpose` | Select | Required | Allowed: `business_expansion`, `working_capital`, `equipment_purchase`, `crop_inputs`, `livestock_purchase`, `home_improvement`, `education`, `medical` | working_capital | Dataset B: `loan_purpose` | Readiness, Archetype, Recommendation |
+| 3 | Loan Amount Requested | `loan_amount` | Integer | Required | Min: 1,000, Max: 5,000,000 | 50000 | Dataset B: `loan_amount` | Readiness, Recommendation |
+| 4 | Loan Purpose | `loan_purpose` | Select | Required | Allowed: `business_expansion`, `working_capital`, `equipment_purchase`, `crop_inputs`, `livestock_purchase`, `home_improvement`, `education`, `medical` | working_capital | Dataset B: `loan_purpose` | Readiness, Archetype, Recommendation |
 
 ---
 
-### Section 4 — Dependents
+### Section 4 — Housing Information
 
 | # | User Label | Internal Name | Data Type | Required | Validation Rules | Example Value | Dataset Source | Used By |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 10 | Young Dependents (under 18) | `young_dependents` | Integer | Required | Min: 0, Max: 15 | 3 | Dataset B: `young_dependents` | Readiness, Recommendation |
-| 11 | Elderly Dependents (above 60) | `old_dependents` | Integer | Required | Min: 0, Max: 10 | 1 | Dataset B: `old_dependents` | Readiness, Recommendation |
+| 5 | Pincode | `pincode` | String | Required | 6-digit valid Indian Pincode | 411001 | Intake | Triage Engine |
 
 ---
 
-### Section 5 — Housing Information
+## Dynamic Stage 2 Verification Fields
 
-| # | User Label | Internal Name | Data Type | Required | Validation Rules | Example Value | Dataset Source | Used By |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 12 | Home Ownership | `home_ownership` | Select | Required | Allowed: `owned`, `rented`, `employer_provided`, `family_shared` | owned | Dataset B: `home_ownership` | Readiness, Archetype, Recommendation |
-| 13 | Type of House | `type_of_house` | Select | Required | Allowed: `pucca` (permanent), `semi_pucca` (semi-permanent), `kucha` (temporary) | semi_pucca | Dataset B: `type_of_house` | Readiness, Archetype |
-| 14 | House Area (sq ft) | `house_area` | Integer | Optional | Min: 50, Max: 10,000 | 450 | Dataset B: `house_area` | Readiness |
+If Triage passes and the borrower proceeds to `Pending Verification` (Field Visit), the Field Officer CRM explicitly collects the following:
 
----
-
-### Section 6 — Infrastructure Access
-
-| # | User Label | Internal Name | Data Type | Required | Validation Rules | Example Value | Dataset Source | Used By |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 15 | Has Electricity | `has_electricity` | Checkbox | Required | Allowed: `true`, `false` | true | Dataset B: amenity flags | Readiness, Archetype, Recommendation |
-| 16 | Has Piped Water Supply | `has_water` | Checkbox | Required | Allowed: `true`, `false` | false | Dataset B: amenity flags | Readiness, Archetype, Recommendation |
-| 17 | Has Road Connectivity | `has_road` | Checkbox | Required | Allowed: `true`, `false` | true | Dataset B: amenity flags | Readiness, Archetype |
-| 18 | Has Internet Access | `has_internet` | Checkbox | Required | Allowed: `true`, `false` | false | Dataset B: amenity flags | Readiness, Archetype |
+| # | Field | Type | Note |
+| :--- | :--- | :--- | :--- |
+| V1 | `secondary_contact_number` | String | Strictly for skip-tracing/fraud detection; banned as a qualitative trust metric. |
+| V2 | `fo_visit_photo_hash` | String | Geotagged photo hash for anti-collusion audit trail. |
+| V3 | `verified_monthly_cash_income` | Integer | Destroy the intake bracket constraint. |
+| V4 | `vintage_artifact_type` | Select | Used to anchor business vintage math (e.g., `merchant_qr`, `municipal_license`, `none`). |
+| V5 | `vintage_artifact_issue_date`| Date | Used to calculate `business_vintage_months`. |
 
 ---
 
@@ -88,13 +75,11 @@ Fields are designed to be accessible to rural and semi-urban applicants with lim
 
 | Category | Required | Optional | Total |
 | :--- | :--- | :--- | :--- |
-| Personal Information | 3 | 0 | 3 |
-| Livelihood Details | 3 | 1 | 4 |
+| Personal Information | 1 | 0 | 1 |
+| Livelihood Details | 1 | 0 | 1 |
 | Loan Details | 2 | 0 | 2 |
-| Dependents | 2 | 0 | 2 |
-| Housing Information | 2 | 1 | 3 |
-| Infrastructure Access | 4 | 0 | 4 |
-| **Total** | **16** | **2** | **18** |
+| Housing Information | 1 | 0 | 1 |
+| **Total** | **5** | **0** | **5** |
 
 ---
 
@@ -104,21 +89,10 @@ This table confirms every engine has at least the minimum required fields to pro
 
 | Engine | Required Fields Used | Optional Fields Used |
 | :--- | :--- | :--- |
-| **Readiness Engine** | `age`, `gender`, `primary_business`, `annual_income`, `monthly_expenses`, `loan_amount`, `loan_purpose`, `young_dependents`, `old_dependents`, `home_ownership`, `type_of_house`, `has_electricity`, `has_water`, `has_road`, `has_internet` (15 fields) | `secondary_business`, `house_area` (2 fields) |
-| **Livelihood Archetype Engine** | `age`, `gender`, `primary_business`, `annual_income`, `loan_purpose`, `home_ownership`, `type_of_house`, `has_electricity`, `has_water`, `has_road`, `has_internet` (11 fields) | `secondary_business` (1 field) |
-| **Recommendation Engine** | `primary_business`, `annual_income`, `monthly_expenses`, `loan_amount`, `loan_purpose`, `young_dependents`, `old_dependents`, `home_ownership`, `has_electricity`, `has_water`, `has_internet` (11 fields) | — |
+| **Readiness Engine** | `age` (derived), `loan_amount`, `loan_purpose` (3 fields) | — |
+| **Livelihood Archetype Engine** | `age` (derived), `loan_purpose` (2 fields) | — |
+| **Recommendation Engine** | `loan_amount`, `loan_purpose` (2 fields) | — |
 | **PDF Report Engine** | `full_name` + all assessment outputs | All fields included in report |
-
----
-
-## Default Values for Optional Fields
-
-When an optional field is omitted, the backend applies these defaults during preprocessing:
-
-| Field | Default Value | Rationale |
-| :--- | :--- | :--- |
-| `secondary_business` | `none` | Assume single income source |
-| `house_area` | Median from Dataset B training data | Imputed from dataset distribution |
 
 ---
 
@@ -128,31 +102,19 @@ These features are calculated from raw inputs during preprocessing. They are not
 
 | Derived Feature | Formula | Used By |
 | :--- | :--- | :--- |
-| `total_dependents` | `young_dependents + old_dependents` | Readiness, Recommendation |
-| `income_expense_ratio` | `annual_income / (monthly_expenses × 12)` | Readiness, Recommendation |
-| `loan_income_ratio` | `loan_amount / annual_income` | Readiness, Recommendation |
-| `infrastructure_score` | Count of `true` values across `has_electricity`, `has_water`, `has_road`, `has_internet` (0–4) | Readiness, Archetype |
-| `disposable_income` | `(annual_income / 12) - monthly_expenses` | Readiness, Recommendation |
+| `age` | Extracted from KYC (PAN/Aadhaar) | Readiness, Archetype |
+| `monthly_living_cost` | `Base_Poverty_Line * Pincode_Tier_Multiplier` | Triage, Optimization |
+| `business_vintage_months` | `Current_Date - vintage_artifact_issue_date` (0 if artifact is none) | Livelihood Resilience |
 
 ---
 
 ## Frontend Grouping
 
-Fields should be presented to the user in six sections matching the table structure above:
+Fields should be presented to the user in five sections matching the table structure above:
 
-1. **Personal Information** — Basic identity
+1. **Personal Information** — Basic identity (Age is strictly hidden)
 2. **Livelihood Details** — How they earn
 3. **Loan Details** — What they need
-4. **Dependents** — Financial obligations
-5. **Housing Information** — Stability indicators
-6. **Infrastructure Access** — Checkboxes for basic amenities
+4. **Housing Information** — Stability indicators
 
-This ordering follows a natural progression from "who are you" → "how do you earn" → "what do you need" → "who depends on you" → "where do you live" → "what infrastructure do you have."
-
----
-
-## Important Notes
-
-- **No credit score field.** Person B is new-to-credit. No bureau data is collected or assumed.
-- **No approval probability output.** Readiness ≠ Approval. The system assesses preparedness, not creditworthiness.
-- **Checkbox UX for infrastructure.** Binary flags are presented as checkboxes to minimize input effort for users who may have limited digital literacy.
+*(Note: Monthly expenses, direct dependents, sole earner status, and explicit age are banned. The UI must not ask these questions.)*

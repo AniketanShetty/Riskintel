@@ -2,28 +2,6 @@ import { Check, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react'
 import { useState } from 'react'
 import EvidenceDrawer from './EvidenceDrawer'
 
-function resolveValue(feature, response) {
-  // Hide literal "Unknown" — resolve from parent data per project rules
-  const applicant = response.applicant || {}
-
-  // Person A: input echoes
-  if (response.user_type === 'person_a') {
-    if (feature === 'cibil_score' && response.risk_tier?.score_used != null) {
-      return response.risk_tier.score_used
-    }
-    if (['loan_amount', 'annual_income', 'loan_term'].includes(feature)) {
-      if (applicant[feature] != null) return applicant[feature]
-    }
-  }
-
-  // Person B: readiness component score
-  if (response.user_type === 'person_b') {
-    const comp = response.readiness?.components?.[feature]
-    if (comp && typeof comp.score === 'number') return comp.score
-  }
-
-  return null
-}
 
 function formatFeature(feature) {
   return feature
@@ -72,8 +50,7 @@ export default function FactorCard({ factor, isStrength, isMentorMode, response,
   const leftBorder = isStrength ? '' : 'border-l-4 border-l-[var(--color-ochre)]'
   const Icon = isStrength ? Check : ArrowRight
 
-  const resolved = resolveValue(factor.feature, response)
-  const formatted = resolved != null ? formatValue(factor.feature, resolved) : null
+  const formatted = factor.value !== 'Unknown' && factor.value != null ? formatValue(factor.feature, factor.value) : null
 
   const cardBg = isMentorMode ? 'bg-slate-800 border-slate-700' : `bg-white ${accentBorder}`
   const titleColor = isMentorMode ? 'text-slate-200' : 'text-[var(--color-primary)]'

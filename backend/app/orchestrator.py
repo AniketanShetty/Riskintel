@@ -152,10 +152,39 @@ def execute_orchestrator(raw_payload: Dict[str, Any]) -> Dict[str, Any]:
                 "description": "Unclassified profile due to engine degradation."
             }
             
-        # --- E2 overriding E1 when risk tier = P4 ---
-        # Force final verdict to Unlikely if Risk Tier is P4 and E1 gave approval
+        # --- Deterministic Banking Guardrails ---
         is_override = False
         eligibility_verdict = eligibility_res["verdict"]
+
+        try:
+            g_age = int(payload.get("age", 0))
+            g_term = int(payload.get("loan_term", 0))
+            g_income = float(payload.get("annual_income", 0))
+            g_loan = float(payload.get("loan_amount", 0))
+        except (ValueError, TypeError):
+            g_age, g_term, g_income, g_loan = 0, 0, 0.0, 0.0
+            
+        maturity_age = g_age + g_term
+        lti = g_loan / max(g_income, 1.0)
+        
+        # Guardrail 1: Low Income Review Flag
+        if g_income < 300000:
+            policy_override_flags.append("FLAG_LOW_INCOME_REVIEW")
+
+        # Guardrail 2: Extreme LTI Rejection
+        if lti > 6.0:
+            eligibility_verdict = "Unlikely"
+            is_override = True
+            policy_override_flags.append("OVERRIDE_LTI_REJECTION")
+            
+        # Guardrail 3: Age-Term Maturity Rejection
+        if maturity_age > 70:
+            eligibility_verdict = "Unlikely"
+            is_override = True
+            policy_override_flags.append("OVERRIDE_AGE_TERM_REJECTION")
+
+        # --- E2 overriding E1 when risk tier = P4 ---
+        # Force final verdict to Unlikely if Risk Tier is P4 and E1 gave approval
         if risk_tier_raw.get("risk_tier") == "P4" and eligibility_verdict in ("Highly Likely", "Likely"):
             eligibility_verdict = "Unlikely"
             is_override = True
@@ -170,6 +199,9 @@ def execute_orchestrator(raw_payload: Dict[str, Any]) -> Dict[str, Any]:
         # Assemble internal inputs for recommendations
         elig_copy = copy.deepcopy(eligibility_res)
         elig_copy["verdict"] = final_verdict
+        elig_copy["policy_override_flags"] = policy_override_flags
+        elig_copy["maturity_age"] = maturity_age
+        elig_copy["lti"] = lti
         
         # Fail-loud governance: the engine contract requires a `thresholds`
         # block. If missing, raise GovernanceError instead of silently
@@ -292,15 +324,39 @@ def execute_orchestrator(raw_payload: Dict[str, Any]) -> Dict[str, Any]:
                 "cluster_id": 0
             }
             
-        # --- E5 Readiness Override ---
-        # E5 Band "Ready" vs floor_breach_triggered == true
-        # Floor logic wins. Ignore continuous score, force band to Not Ready
+        # --- PERSON B GUARDRAILS (Overrides and Score Caps) ---
+        annual_income = float(payload.get("annual_income", 0) or 0)
+        loan_amount = float(payload.get("loan_amount", 0) or 0)
+        lti = loan_amount / max(annual_income, 1.0)
+        
+        purpose_alignment = (
+            readiness_res.get("components", {})
+            .get("business_viability", {})
+            .get("factors", {})
+            .get("purpose_alignment", "Neutral")
+        )
+
         is_floor_breach = readiness_res.get("policy_override_applied") or readiness_res.get("floor_breach_triggered") or False
+        
+        # Silent Warning Flag: Low Income Review
+        if annual_income < 300000:
+            policy_override_flags.append("FLAG_LOW_INCOME_REVIEW")
+
+        # Mutating Precedence Hierarchy
         if is_floor_breach:
             readiness_res["band"] = "Not Ready"
             readiness_res["score"] = 0
             policy_override_flags.append("OVERRIDE_E5_FLOOR_BREACH")
             policy_override_flags.append("ENGINE_POLICY_OVERRIDE")
+        elif lti > 3.0:
+            readiness_res["band"] = "Not Ready"
+            readiness_res["score"] = 0
+            policy_override_flags.append("OVERRIDE_EXTREME_DEBT")
+        elif purpose_alignment == "Misaligned":
+            readiness_res["score"] = min(readiness_res.get("score", 0), 74)
+            if readiness_res.get("band") == "Ready":
+                readiness_res["band"] = "Moderately Ready"
+            policy_override_flags.append("FLAG_PURPOSE_MISMATCH")
             
         final_verdict = readiness_res["band"]
 
@@ -317,6 +373,7 @@ def execute_orchestrator(raw_payload: Dict[str, Any]) -> Dict[str, Any]:
         # Prepare readiness copy for E4
         readiness_copy = copy.deepcopy(readiness_res)
         readiness_copy["band"] = final_verdict
+        readiness_copy["policy_override_flags"] = policy_override_flags
         
         # 3. Recommendation Engine (Non-Critical)
         try:

@@ -64,9 +64,9 @@ export default function OutcomeHero({ response, verdict, primaryReason, userType
 
   return (
     <section
-      className={`rounded-3xl border p-8 md:p-10 shadow-sm print-color-adjust ${
+      className={`rounded-3xl border p-8 md:p-10 shadow-sm ${
         isMentorMode
-          ? 'bg-slate-800 border-slate-700 text-slate-100'
+          ? 'bg-slate-800 border-slate-700 text-slate-100 print:bg-white print:border-slate-200 print:text-[var(--color-primary)]'
           : 'bg-white border-slate-200 text-[var(--color-primary)]'
       }`}
     >

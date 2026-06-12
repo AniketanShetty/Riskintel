@@ -35,8 +35,16 @@ function splitFactors(response) {
 }
 
 export default function App() {
-  const [currentPersona, setCurrentPersona] = useState(null)
-  const [viewState, setViewState] = useState('landing') // landing, traditional_form, ntc_form, results
+  const [currentPersona, setCurrentPersona] = useState(() => {
+    const saved = localStorage.getItem('riskintel_session')
+    if (saved) {
+      try { return JSON.parse(saved) } catch (e) { return null }
+    }
+    return null
+  })
+  const [viewState, setViewState] = useState(() => {
+    return localStorage.getItem('riskintel_session') ? 'results' : 'landing'
+  })
   const [isMentorMode, setIsMentorMode] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [showArchitecture, setShowArchitecture] = useState(false)
@@ -46,8 +54,15 @@ export default function App() {
     else document.body.classList.remove('mentor-mode')
   }, [isMentorMode])
 
+  useEffect(() => {
+    if (currentPersona) {
+      localStorage.setItem('riskintel_session', JSON.stringify(currentPersona))
+    } else {
+      localStorage.removeItem('riskintel_session')
+    }
+  }, [currentPersona])
+
   const handleSubmitAssessment = async (payload, endpointUrl) => {
-    setIsLoading(true)
     try {
       const res = await fetch(endpointUrl, {
         method: 'POST',
@@ -70,8 +85,6 @@ export default function App() {
     } catch (err) {
       console.error("API Error:", err)
       throw err 
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -159,10 +172,11 @@ export default function App() {
           <>
             <div className="flex justify-between items-end mb-4 print-color-adjust">
                <div>
+                 <h2 className={`text-xl font-bold mb-1 ${isMentorMode ? 'text-slate-100' : 'text-slate-800'}`}>{currentPersona.name}</h2>
                  <p className={`text-sm font-semibold uppercase tracking-wider ${isMentorMode ? 'text-slate-500' : 'text-slate-400'}`}>Assessment Reference ID</p>
-                 <p className={`font-mono ${isMentorMode ? 'text-slate-400' : 'text-slate-600'}`}>ASMT-{currentPersona.id?.toUpperCase().replace('CUSTOM_','') || Date.now()}</p>
+                 <p className={`font-mono ${isMentorMode ? 'text-slate-400' : 'text-slate-600'}`}>ASMT-{String(currentPersona.id || 'N/A').toUpperCase().replace('CUSTOM_','')}</p>
                </div>
-               <button onClick={() => setViewState(currentPersona.user_type === 'person_a' ? 'traditional_form' : 'ntc_form')} className="text-sm font-medium text-blue-600 hover:text-blue-800 underline underline-offset-4">
+               <button onClick={() => setViewState(currentPersona.applicant.user_type === 'person_a' ? 'traditional_form' : 'ntc_form')} className="text-sm font-medium text-blue-600 hover:text-blue-800 underline underline-offset-4 print:hidden">
                  Edit Assessment
                </button>
             </div>
@@ -204,7 +218,7 @@ export default function App() {
 }
 
 function NTCRoutingBanner({ response }) {
-  if (!response || response.routing_decision?.routed_to !== 'person_b') return null;
+  if (!response || response.routing_decision?.original_user_type !== 'person_a' || response.routing_decision?.routed_to !== 'person_b') return null;
   return (
     <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex gap-4 items-start print-color-adjust">
       <div className="flex-shrink-0 mt-0.5">

@@ -209,7 +209,10 @@ PERSON_A_RULES = [
         rule_id="A-RISK-001",
         feature_name="loan_amount",
         priority=100,
-        condition_callable=lambda ctx: is_top_negative_contributor(ctx, 'loan_amount'),
+        condition_callable=lambda ctx: (
+            is_top_negative_contributor(ctx, 'loan_amount') and
+            (ctx.get('inputs', {}).get('loan_amount', 0) / max(ctx.get('inputs', {}).get('annual_income', 1), 1)) > 0.3
+        ),
         evidence_callable=lambda ctx: f"Requested loan amount: {_format_money(ctx.get('inputs', {}).get('loan_amount', 'N/A'))}.",
         reason_template="Your requested loan amount of {loan_amount} appears high relative to your yearly income of {annual_income}.",
         advice_template="Reducing the loan size to one that lines up more closely with your income can strengthen your profile, though no specific amount is guaranteed.",
@@ -243,5 +246,62 @@ PERSON_A_RULES = [
             "eligibility.feature_contributions.cibil_score",
             "risk_tier.threshold_values.p1_min",
         ]
+    ),
+
+    # Age-Term Guardrail Override
+    ExplanationRule(
+        rule_id="A-POLICY-002",
+        feature_name="policy_override",
+        priority=98,
+        condition_callable=lambda ctx: (
+            "OVERRIDE_AGE_TERM_REJECTION" in ctx.get('eligibility', {}).get('policy_override_flags', [])
+            and not is_verdict_favorable(ctx)
+        ),
+        evidence_callable=lambda ctx: (
+            f"Your projected age at the end of the loan term ({ctx.get('eligibility', {}).get('maturity_age', 'N/A')} years) "
+            f"exceeds our maximum allowable maturity age."
+        ),
+        reason_template="Our policy requires that all loans are fully repaid within the borrower's primary income-generating years (before age 70).",
+        advice_template="Because your requested loan term pushes the maturity date past our age limit, this application cannot be approved. Consider reapplying with a shorter loan term or a younger co-applicant.",
+        format_args_callable=lambda ctx: {},
+        advice_type="evidence_based",
+        evidence_sources=["eligibility.maturity_age", "audit.policy_override_flags"]
+    ),
+
+    # LTI Guardrail Override
+    ExplanationRule(
+        rule_id="A-POLICY-003",
+        feature_name="policy_override",
+        priority=97,
+        condition_callable=lambda ctx: (
+            "OVERRIDE_LTI_REJECTION" in ctx.get('eligibility', {}).get('policy_override_flags', [])
+            and not is_verdict_favorable(ctx)
+        ),
+        evidence_callable=lambda ctx: (
+            f"The requested loan amount is {round(ctx.get('eligibility', {}).get('lti', 0), 1)}x your annual income, "
+            f"which exceeds our maximum allowable leverage ratio."
+        ),
+        reason_template="Our policy restricts loan amounts to a manageable multiple of your annual income to ensure monthly payments remain affordable.",
+        advice_template="The requested loan amount is too high for your current income level. You must significantly reduce the loan amount to qualify under our affordability policy.",
+        format_args_callable=lambda ctx: {},
+        advice_type="evidence_based",
+        evidence_sources=["eligibility.lti", "audit.policy_override_flags"]
+    ),
+
+    # Low Income Review Flag
+    ExplanationRule(
+        rule_id="A-POLICY-004",
+        feature_name="policy_override",
+        priority=85,
+        condition_callable=lambda ctx: (
+            "FLAG_LOW_INCOME_REVIEW" in ctx.get('eligibility', {}).get('policy_override_flags', [])
+            and is_verdict_favorable(ctx)
+        ),
+        evidence_callable=lambda ctx: "Your reported annual income is below the standard urban subsistence threshold.",
+        reason_template="While your credit profile is strong enough for approval, our policy requires manual review for incomes below this threshold to ensure the loan supports your long-term financial health.",
+        advice_template="Your application is marked as 'Likely', but will undergo a mandatory manual review by a loan officer. Please be prepared to discuss the specific purpose of the loan.",
+        format_args_callable=lambda ctx: {},
+        advice_type="evidence_based",
+        evidence_sources=["audit.policy_override_flags"]
     ),
 ]

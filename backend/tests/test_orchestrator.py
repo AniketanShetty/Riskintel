@@ -335,3 +335,305 @@ def test_health_deep(client):
     data = response.json()
     assert data["status"] == "UP"
     assert data["dependencies"]["sqlite_writable"] == "CONNECTED"
+
+# ── 7. Person A Guardrails Tests ─────────────────────────────────────────
+
+def test_person_a_age_term_guardrail(client, valid_person_a_payload):
+    """Verify that Age + Term > 70 forces Unlikely verdict."""
+    payload = valid_person_a_payload.copy()
+    payload["age"] = 55
+    payload["loan_term"] = 20  # Total 75
+    
+    with patch("app.orchestrator.get_eligibility") as mock_e1, \
+         patch("app.orchestrator.get_risk_tier") as mock_e2, \
+         patch("app.orchestrator.get_borrower_archetype") as mock_e3, \
+         patch("app.orchestrator.generate_person_a_recommendations") as mock_e4:
+         
+        mock_e1.return_value = {"verdict": "Likely", "probability": 0.8, "bias": 0.5, "feature_contributions": {}}
+        mock_e2.return_value = {"risk_tier": "P1", "tier_description": "Low Risk", "thresholds": {"p1_min": 700, "p2_min": 600, "p2_max": 699, "p3_min": 500, "p3_max": 599, "p4_max": 499}}
+        mock_e3.return_value = {"cluster_id": 0, "archetype_label": "Mock"}
+        mock_e4.return_value = {"decision_verdict": "Unlikely", "primary_reason": "Mock", "contributing_factors": [], "triggered_rule_ids": ["A-POLICY-002"]}
+        
+        response = client.post("/api/assess", json=payload)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["eligibility"]["verdict"] == "Unlikely"
+        
+        # Verify database flags
+        db_path = get_db_path()
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT policy_override_flags FROM audit_log WHERE correlation_id = ?", (data["correlation_id"],))
+        row = cursor.fetchone()
+        conn.close()
+        
+        flags = json.loads(row[0])
+        assert "OVERRIDE_AGE_TERM_REJECTION" in flags
+
+def test_person_a_lti_guardrail(client, valid_person_a_payload):
+    """Verify that LTI > 6.0 forces Unlikely verdict."""
+    payload = valid_person_a_payload.copy()
+    payload["annual_income"] = 500000
+    payload["loan_amount"] = 5000000  # LTI = 10.0
+    
+    with patch("app.orchestrator.get_eligibility") as mock_e1, \
+         patch("app.orchestrator.get_risk_tier") as mock_e2, \
+         patch("app.orchestrator.get_borrower_archetype") as mock_e3, \
+         patch("app.orchestrator.generate_person_a_recommendations") as mock_e4:
+         
+        mock_e1.return_value = {"verdict": "Likely", "probability": 0.8, "bias": 0.5, "feature_contributions": {}}
+        mock_e2.return_value = {"risk_tier": "P1", "tier_description": "Low Risk", "thresholds": {"p1_min": 700, "p2_min": 600, "p2_max": 699, "p3_min": 500, "p3_max": 599, "p4_max": 499}}
+        mock_e3.return_value = {"cluster_id": 0, "archetype_label": "Mock"}
+        mock_e4.return_value = {"decision_verdict": "Unlikely", "primary_reason": "Mock", "contributing_factors": [], "triggered_rule_ids": ["A-POLICY-003"]}
+        
+        response = client.post("/api/assess", json=payload)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["eligibility"]["verdict"] == "Unlikely"
+        
+        # Verify database flags
+        db_path = get_db_path()
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT policy_override_flags FROM audit_log WHERE correlation_id = ?", (data["correlation_id"],))
+        row = cursor.fetchone()
+        conn.close()
+        
+        flags = json.loads(row[0])
+        assert "OVERRIDE_LTI_REJECTION" in flags
+
+def test_person_a_low_income_flag(client, valid_person_a_payload):
+    """Verify that Low Income appends flag but does not reject."""
+    payload = valid_person_a_payload.copy()
+    payload["annual_income"] = 250000
+    payload["loan_amount"] = 500000  # LTI = 2.0
+    
+    with patch("app.orchestrator.get_eligibility") as mock_e1, \
+         patch("app.orchestrator.get_risk_tier") as mock_e2, \
+         patch("app.orchestrator.get_borrower_archetype") as mock_e3, \
+         patch("app.orchestrator.generate_person_a_recommendations") as mock_e4:
+         
+        mock_e1.return_value = {"verdict": "Likely", "probability": 0.8, "bias": 0.5, "feature_contributions": {}}
+        mock_e2.return_value = {"risk_tier": "P1", "tier_description": "Low Risk", "thresholds": {"p1_min": 700, "p2_min": 600, "p2_max": 699, "p3_min": 500, "p3_max": 599, "p4_max": 499}}
+        mock_e3.return_value = {"cluster_id": 0, "archetype_label": "Mock"}
+        mock_e4.return_value = {"decision_verdict": "Likely", "primary_reason": "Mock", "contributing_factors": [], "triggered_rule_ids": ["A-POLICY-004"]}
+        
+        response = client.post("/api/assess", json=payload)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["eligibility"]["verdict"] == "Likely"
+        
+        # Verify database flags
+        db_path = get_db_path()
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT policy_override_flags FROM audit_log WHERE correlation_id = ?", (data["correlation_id"],))
+        row = cursor.fetchone()
+        conn.close()
+        
+        flags = json.loads(row[0])
+        assert "FLAG_LOW_INCOME_REVIEW" in flags
+
+# --- PERSON B GUARDRAIL TESTS ---
+
+def test_person_b_extreme_debt(client, valid_person_b_payload):
+    payload = valid_person_b_payload.copy()
+    payload["loan_amount"] = 5000000  # LTI = 10.0
+    
+    with patch("app.orchestrator.get_readiness_score") as mock_e5, \
+         patch("app.orchestrator.map_livelihood") as mock_livelihood, \
+         patch("app.orchestrator.generate_person_b_recommendations") as mock_e4:
+         
+        mock_e5.return_value = {
+            "score": 80,
+            "band": "Ready",
+            "components": {
+                "financial_health": {"score": 80, "weight": 0.35, "factors": {}},
+                "housing_stability": {"score": 80, "weight": 0.20, "factors": {}},
+                "infrastructure_access": {"score": 80, "weight": 0.15, "factors": {}},
+                "household_burden": {"score": 80, "weight": 0.15, "factors": {}},
+                "business_viability": {"score": 80, "weight": 0.15, "factors": {}}
+            },
+            "policy_override_applied": False,
+            "thresholds": {"strong_status_min": 70}
+        }
+        mock_livelihood.return_value = {"cluster_id": 1, "label": "Mock", "description": "Mock"}
+        mock_e4.return_value = {"decision_verdict": "Not Ready", "primary_reason": "Mock", "contributing_factors": []}
+        
+        response = client.post("/api/assess", json=payload)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["readiness"]["band"] == "Not Ready"
+        assert data["readiness"]["score"] == 0
+        
+        db_path = get_db_path()
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT policy_override_flags FROM audit_log WHERE correlation_id = ?", (data["correlation_id"],))
+        row = cursor.fetchone()
+        conn.close()
+        
+        flags = json.loads(row[0])
+        assert "OVERRIDE_EXTREME_DEBT" in flags
+
+def test_person_b_purpose_misalignment(client, valid_person_b_payload):
+    payload = valid_person_b_payload.copy()
+    
+    with patch("app.orchestrator.get_readiness_score") as mock_e5, \
+         patch("app.orchestrator.map_livelihood") as mock_livelihood, \
+         patch("app.orchestrator.generate_person_b_recommendations") as mock_e4:
+         
+        mock_e5.return_value = {
+            "score": 95,
+            "band": "Ready",
+            "components": {
+                "financial_health": {"score": 95, "weight": 0.35, "factors": {}},
+                "housing_stability": {"score": 95, "weight": 0.20, "factors": {}},
+                "infrastructure_access": {"score": 95, "weight": 0.15, "factors": {}},
+                "household_burden": {"score": 95, "weight": 0.15, "factors": {}},
+                "business_viability": {"score": 95, "weight": 0.15, "factors": {"purpose_alignment": "Misaligned"}}
+            },
+            "policy_override_applied": False,
+            "thresholds": {"strong_status_min": 70}
+        }
+        mock_livelihood.return_value = {"cluster_id": 1, "label": "Mock", "description": "Mock"}
+        mock_e4.return_value = {"decision_verdict": "Moderately Ready", "primary_reason": "Mock", "contributing_factors": []}
+        
+        response = client.post("/api/assess", json=payload)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["readiness"]["band"] == "Moderately Ready"
+        assert data["readiness"]["score"] == 74
+        
+        db_path = get_db_path()
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT policy_override_flags FROM audit_log WHERE correlation_id = ?", (data["correlation_id"],))
+        row = cursor.fetchone()
+        conn.close()
+        
+        flags = json.loads(row[0])
+        assert "FLAG_PURPOSE_MISMATCH" in flags
+
+def test_person_b_low_income(client, valid_person_b_payload):
+    payload = valid_person_b_payload.copy()
+    payload["annual_income"] = 100000
+    payload["loan_amount"] = 50000  # LTI = 0.5
+    
+    with patch("app.orchestrator.get_readiness_score") as mock_e5, \
+         patch("app.orchestrator.map_livelihood") as mock_livelihood, \
+         patch("app.orchestrator.generate_person_b_recommendations") as mock_e4:
+         
+        mock_e5.return_value = {
+            "score": 85,
+            "band": "Ready",
+            "components": {
+                "financial_health": {"score": 85, "weight": 0.35, "factors": {}},
+                "housing_stability": {"score": 85, "weight": 0.20, "factors": {}},
+                "infrastructure_access": {"score": 85, "weight": 0.15, "factors": {}},
+                "household_burden": {"score": 85, "weight": 0.15, "factors": {}},
+                "business_viability": {"score": 85, "weight": 0.15, "factors": {}}
+            },
+            "policy_override_applied": False,
+            "thresholds": {"strong_status_min": 70}
+        }
+        mock_livelihood.return_value = {"cluster_id": 1, "label": "Mock", "description": "Mock"}
+        mock_e4.return_value = {"decision_verdict": "Ready", "primary_reason": "Mock", "contributing_factors": []}
+        
+        response = client.post("/api/assess", json=payload)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["readiness"]["band"] == "Ready"
+        assert data["readiness"]["score"] == 85
+        
+        db_path = get_db_path()
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT policy_override_flags FROM audit_log WHERE correlation_id = ?", (data["correlation_id"],))
+        row = cursor.fetchone()
+        conn.close()
+        
+        flags = json.loads(row[0])
+        assert "FLAG_LOW_INCOME_REVIEW" in flags
+
+def test_person_b_e5_floor_breach(client, valid_person_b_payload):
+    payload = valid_person_b_payload.copy()
+    
+    with patch("app.orchestrator.get_readiness_score") as mock_e5, \
+         patch("app.orchestrator.map_livelihood") as mock_livelihood, \
+         patch("app.orchestrator.generate_person_b_recommendations") as mock_e4:
+         
+        mock_e5.return_value = {
+            "score": 0,
+            "band": "Not Ready",
+            "components": {
+                "financial_health": {"score": 0, "weight": 0.35, "factors": {}},
+                "housing_stability": {"score": 0, "weight": 0.20, "factors": {}},
+                "infrastructure_access": {"score": 0, "weight": 0.15, "factors": {}},
+                "household_burden": {"score": 0, "weight": 0.15, "factors": {}},
+                "business_viability": {"score": 0, "weight": 0.15, "factors": {}}
+            },
+            "policy_override_applied": True,
+            "thresholds": {"strong_status_min": 70}
+        }
+        mock_livelihood.return_value = {"cluster_id": 1, "label": "Mock", "description": "Mock"}
+        mock_e4.return_value = {"decision_verdict": "Not Ready", "primary_reason": "Mock", "contributing_factors": []}
+        
+        response = client.post("/api/assess", json=payload)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["readiness"]["band"] == "Not Ready"
+        assert data["readiness"]["score"] == 0
+        
+        db_path = get_db_path()
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT policy_override_flags FROM audit_log WHERE correlation_id = ?", (data["correlation_id"],))
+        row = cursor.fetchone()
+        conn.close()
+        
+        flags = json.loads(row[0])
+        assert "OVERRIDE_E5_FLOOR_BREACH" in flags
+
+def test_person_b_guardrails_simultaneous(client, valid_person_b_payload):
+    payload = valid_person_b_payload.copy()
+    payload["loan_amount"] = 5000000  # Extreme debt
+    
+    with patch("app.orchestrator.get_readiness_score") as mock_e5, \
+         patch("app.orchestrator.map_livelihood") as mock_livelihood, \
+         patch("app.orchestrator.generate_person_b_recommendations") as mock_e4:
+         
+        # Also simulate misalignment
+        mock_e5.return_value = {
+            "score": 95,
+            "band": "Ready",
+            "components": {
+                "financial_health": {"score": 95, "weight": 0.35, "factors": {}},
+                "housing_stability": {"score": 95, "weight": 0.20, "factors": {}},
+                "infrastructure_access": {"score": 95, "weight": 0.15, "factors": {}},
+                "household_burden": {"score": 95, "weight": 0.15, "factors": {}},
+                "business_viability": {"score": 95, "weight": 0.15, "factors": {"purpose_alignment": "Misaligned"}}
+            },
+            "policy_override_applied": False,
+            "thresholds": {"strong_status_min": 70}
+        }
+        mock_livelihood.return_value = {"cluster_id": 1, "label": "Mock", "description": "Mock"}
+        mock_e4.return_value = {"decision_verdict": "Not Ready", "primary_reason": "Mock", "contributing_factors": []}
+        
+        response = client.post("/api/assess", json=payload)
+        assert response.status_code == 200
+        data = response.json()
+        # Extreme Debt wins
+        assert data["readiness"]["band"] == "Not Ready"
+        assert data["readiness"]["score"] == 0
+        
+        db_path = get_db_path()
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT policy_override_flags FROM audit_log WHERE correlation_id = ?", (data["correlation_id"],))
+        row = cursor.fetchone()
+        conn.close()
+        
+        flags = json.loads(row[0])
+        assert "OVERRIDE_EXTREME_DEBT" in flags
+        assert "FLAG_PURPOSE_MISMATCH" not in flags  # since elif prevents evaluation

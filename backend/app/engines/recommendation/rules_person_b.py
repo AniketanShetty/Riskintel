@@ -83,6 +83,56 @@ def is_component_below_strong_threshold(ctx, component_name):
     return score < strong_min
 
 PERSON_B_RULES = [
+    # Guardrail Policies
+    ExplanationRule(
+        rule_id="B-POLICY-001",
+        feature_name="policy_override",
+        priority=99,
+        condition_callable=lambda ctx: "OVERRIDE_E5_FLOOR_BREACH" in ctx.get('readiness', {}).get('policy_override_flags', []),
+        evidence_callable=lambda ctx: "Financial health score is critically low (floor breach).",
+        reason_template="Your financial health metrics indicate insufficient current capacity to take on new debt.",
+        advice_template="We cannot recommend a loan at this time. Focus on increasing your operational cash flow and documenting your revenue sources before reapplying.",
+        format_args_callable=lambda ctx: {},
+        advice_type="evidence_based",
+        evidence_sources=["readiness.policy_override_flags"]
+    ),
+    ExplanationRule(
+        rule_id="B-POLICY-002",
+        feature_name="policy_override",
+        priority=98,
+        condition_callable=lambda ctx: "OVERRIDE_EXTREME_DEBT" in ctx.get('readiness', {}).get('policy_override_flags', []),
+        evidence_callable=lambda ctx: "Requested loan amount exceeds mathematical serviceability compared to documented annual income.",
+        reason_template="The requested loan amount is mathematically unserviceable given your current documented annual income.",
+        advice_template="We cannot recommend a loan of this size. Consider requesting a significantly smaller loan amount that aligns with your current revenue.",
+        format_args_callable=lambda ctx: {},
+        advice_type="evidence_based",
+        evidence_sources=["readiness.policy_override_flags"]
+    ),
+    ExplanationRule(
+        rule_id="B-POLICY-003",
+        feature_name="policy_override",
+        priority=85,
+        condition_callable=lambda ctx: "FLAG_PURPOSE_MISMATCH" in ctx.get('readiness', {}).get('policy_override_flags', []),
+        evidence_callable=lambda ctx: "Loan purpose does not align with primary business.",
+        reason_template="The requested loan purpose does not align with your primary documented business sector.",
+        advice_template="Your application has been flagged for manual review. A loan officer will contact you to verify the business use-case for these funds.",
+        format_args_callable=lambda ctx: {},
+        advice_type="evidence_based",
+        evidence_sources=["readiness.policy_override_flags"]
+    ),
+    ExplanationRule(
+        rule_id="B-POLICY-004",
+        feature_name="policy_override",
+        priority=84,
+        condition_callable=lambda ctx: "FLAG_LOW_INCOME_REVIEW" in ctx.get('readiness', {}).get('policy_override_flags', []),
+        evidence_callable=lambda ctx: "Annual income is below standard threshold.",
+        reason_template="Your documented annual income falls below standard microfinance thresholds.",
+        advice_template="While your application is proceeding, a loan officer may request additional documentation to verify your ability to manage household expenses alongside loan payments.",
+        format_args_callable=lambda ctx: {},
+        advice_type="evidence_based",
+        evidence_sources=["readiness.policy_override_flags"]
+    ),
+
     # Fallback Rule
     # Freeze-blocker fix F1-B (parallel to F1 in rules_person_a.py): this
     # rule is gated to non-negative readiness bands so a "Not Ready" or
