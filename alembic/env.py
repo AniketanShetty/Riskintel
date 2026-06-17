@@ -7,19 +7,16 @@ import models.session
 import models.applicant
 import models.verification
 import models.state_event
+import models.idempotency
+import models.dead_letter
+from core.config import settings
 config = context.config
 
-db_url = os.getenv(
-    "TEST_DATABASE_URL",
-    os.getenv(
-        "DATABASE_URL",
-        config.get_main_option("sqlalchemy.url")
-    )
-)
+db_url = settings.TEST_DATABASE_URL or settings.DATABASE_URL or config.get_main_option("sqlalchemy.url")
 
 config.set_main_option("sqlalchemy.url", db_url)
 
-print(f"ALEMBIC_URL = {config.get_main_option('sqlalchemy.url')}")
+
 
 # Load target metadata
 target_metadata = Base.metadata

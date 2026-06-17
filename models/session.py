@@ -4,6 +4,7 @@ from sqlalchemy import String, Integer, DateTime, ForeignKey, Boolean, CheckCons
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from db.base import Base
 from models.enums import ApplicationState, LoanPurpose, LoanTerm, IncomeBracket, BureauGateStatus
+from models.applicant import ApplicantProfile
 
 class ApplicationSession(Base):
     """
@@ -25,7 +26,7 @@ class ApplicationSession(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     current_state: Mapped[ApplicationState] = mapped_column(String(30), nullable=False, server_default="INTAKE")
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
 
     # Loan request fields (immutable after INTAKE submission)
     loan_amount: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -36,6 +37,7 @@ class ApplicationSession(Base):
     # Bureau gate result (set during TRIAGE)
     bureau_gate_status: Mapped[BureauGateStatus | None] = mapped_column(String(15), nullable=True)
     triage_pass: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+
 
     # Relationships (Using unidirectional explicit mapping to prevent Identity Map corruption)
     primary_applicant: Mapped["ApplicantProfile"] = relationship(
@@ -60,6 +62,15 @@ class ApplicationSession(Base):
     state_events: Mapped[list["StateTransitionEvent"]] = relationship(
         "StateTransitionEvent", back_populates="session", order_by="StateTransitionEvent.occurred_at"
     )
-    optimization_result: Mapped["OptimizationResult | None"] = relationship(
-        "OptimizationResult", back_populates="session", uselist=False
+    optimization_results: Mapped[list["OptimizationResult"]] = relationship(
+        "OptimizationResult", back_populates="session",
+        order_by="OptimizationResult.attempt_number"
     )
+
+    @property
+    def aa_retry_count(self) -> int:
+        return sum(1 for e in self.state_events if e.trigger_event in ('AA_PULL_FAILED_RETRY', 'AA_PULL_EXHAUSTED_FALLBACK'))
+
+    @property
+    def fo_retry_count(self) -> int:
+        return sum(1 for e in self.state_events if e.trigger_event in ('FO_UNREACHABLE_RETRY', 'FO_UNREACHABLE_MAX_RETRIES', 'MISSING_SECONDARY_CONTACT', 'USER_REFUSAL'))

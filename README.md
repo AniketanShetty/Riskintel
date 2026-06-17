@@ -1,137 +1,151 @@
-# RiskIntel
+# RiskIntel V2
 
-**Loan Decision Support System — V1**
+## 1. Project Overview
 
----
+RiskIntel V2 is a deterministic, FSM-driven loan decision orchestration system. It is designed to safely sequence the evaluation of loan applicants through Intake, Triage, external Verifications (Bureau, Bank, Webhooks), and Optimization.
 
-## Overview
+Unlike V1, V2 entirely removes obsolete ML models in favor of a mathematically rigorous State Machine that ensures applicants never reach invalid states and that all financial calculations are auditable.
 
-RiskIntel is a backend-focused Loan Decision Support System designed with two equal, non-negotiable goals:
-1. **Borrower-facing:** Provide transparent, fair loan assessments with plain-language explanations. Thin-file borrowers must receive an explicit, fair evaluation path rather than being silently rejected.
-2. **Employee-facing:** Reduce manual arithmetic and subjective guesswork for loan officers by generating standardized, structured baseline reports. 
+## 2. Architecture Overview
 
-The final lending decision ALWAYS belongs to a human. RiskIntel is a heuristic decision-support tool, not an autonomous credit approval AI.
+- **Framework:** FastAPI (Python 3.13)
+- **Database:** PostgreSQL via SQLAlchemy (async)
+- **Migrations:** Alembic
+- **Orchestration:** Finite State Machine (FSM) with robust rollback capabilities and Dead-Letter Queue logging for webhooks.
+- **Idempotency:** Request deduplication built into the API layer.
 
----
+The FSM transitions applicants through states like `INTAKE`, `TRIAGE`, `VERIFICATION_AA`, `VERIFICATION_FO`, `READY`, `NEARLY_READY`, and terminal states like `REJECTED` or `APPROVED`.
 
-## What RiskIntel is NOT
+## 3. Local Development
 
-- NOT a frontend project or UI showcase.
-- NOT an autonomous lending AI.
-- NOT an experimental ML playground.
-- NOT a dashboard.
-
----
-
-## Core Workflows (Minimum Viable RiskIntel)
-
-### Person A — Credit-Aware Borrower
-Applicants with a valid credit history and bureau score.
-**Active Engine:**
-- **E2 (Risk Tier Engine):** Deterministic policy engine mapping CIBIL scores to standard risk tiers (P1-P4).
-
-*Note: E1 (Eligibility) is currently DISABLED pending data governance (see below).*
-
-### Person B — Thin-File / New-To-Credit Borrower
-Applicants with no credit history. They are explicitly routed to this path; silent rerouting is prohibited.
-**Active Engines:**
-- **E5 (Readiness Engine):** Deterministic heuristic scoring financial capacity without relying on bureau data.
-- **E6 (Livelihood Engine):** Deterministic dictionary lookup mapping stated business types to standardized macro-categories.
-
----
-
-## Current Audited Reality & Model Risk Status
-
-Following a comprehensive Model Risk Committee audit, the repository is strictly governed by the following decisions:
-
-| Component | Status | Reason |
-| :--- | :--- | :--- |
-| **E1 (Eligibility ML)** | **DISABLED** | The legacy model used synthetic data, lacked a commercial license, and output mathematically invalid probabilities. Must not be rebuilt until Data Governance procures a legally defensible dataset with proven lineage. |
-| **E2 (Risk Tier)** | **KEEP** | Functioning as a deterministic policy engine. |
-| **E3 (Archetype ML)** | **REMOVED** | Permanently removed due to broken clustering logic, fabricated labels, and restrictive data licensing. |
-| **E5 (Readiness)** | **KEEP** | Functioning as the sole defensible V1 thin-file framework. A V2 redesign is proposed to remove poverty-correlated proxy variables (e.g., infrastructure penalties). |
-| **E6 (Livelihood)** | **KEEP** | Functioning as a deterministic lookup. |
-
----
-
-## Data Governance Blocker
-
-**DATA GOVERNANCE IS THE PRIMARY BLOCKER FOR ANY NEW MODELING.**
-
-Currently, zero production datasets in this repository possess a verified commercial use license or complete provenance. All legacy Kaggle, synthetic, and PII-exposed datasets have been explicitly removed or archived. 
-
-*No machine learning model (e.g., Random Forest, KMeans) may be trained, tuned, or deployed until a real-world, legally procured dataset with a complete `provenance.json` is added to the repository.*
-
----
-
-## Repository Structure
-
-```text
-riskintel/
-├── README.md                        # Master Project Constitution
-├── docs/                            # Governance and Policy Documentation
-│   ├── THIN_FILE_POLICY.md
-│   ├── THIN_FILE_EVALUATION_POLICY.md
-│   ├── DATA_GOVERNANCE_PLAN.md
-│   ├── DATASET_DECISIONS.md
-│   ├── MODEL_RISK_COMMITTEE_DECISION.md
-│   ├── E1_REPLACEMENT_STRATEGY.md
-│   ├── LOAN_OFFICER_WORKFLOW_ANALYSIS.md
-│   ├── MINIMUM_VIABLE_RISKINTEL.md
-│   └── model_cards/                 # Documented policy logic for E2, E5, E6
-│
-├── archive/                         # Deprecated/Unlicensed data (Do not use)
-│
-├── backend/
-│   ├── requirements.txt             # Pinned Python dependencies
-│   ├── run.py                       # Application entry point
-│   └── app/
-│       ├── __init__.py              # Application factory
-│       ├── orchestrator.py          # Primary entry point (E1 bypassed, E3 removed)
-│       ├── routing.py               # Explicit Person A/B routing
-│       └── engines/                 # E2, E5, E6 logic
-│
-└── tests/                           # Health and pipeline tests
-```
-
----
-
-## Quickstart
+To run the application locally without Docker:
 
 ```bash
-cd backend/
-
-# 1. Create virtual environment
+# 1. Create and activate a virtual environment
 python -m venv venv
-venv\Scripts\activate        # Windows
-# source venv/bin/activate   # macOS/Linux
+venv\Scripts\activate      # Windows
+source venv/bin/activate   # macOS/Linux
 
 # 2. Install dependencies
 pip install -r requirements.txt
 
-# 3. Start the API server
-uvicorn app.main:app --reload
+# 3. Setup a local Postgres database and export environment variables (see below)
+# export DATABASE_URL="postgresql://user:pass@localhost:5432/riskintel"
+
+# 4. Run Migrations
+alembic upgrade head
+
+# 5. Start the API server
+uvicorn main:app --reload
 ```
 
----
+## 4. Docker Setup
 
-## Tech Stack & Architecture
+The easiest way to stand up the complete stack (PostgreSQL + RiskIntel API + Auto-migrations) is via Docker Compose.
 
-- **Backend Framework:** FastAPI (Python >= 3.12)
-- **Database:** SQLite via SQLAlchemy (async) and Alembic for migrations
-- **Data Processing:** Pandas, NumPy
-- **Testing:** Pytest, HTTPX, pytest-asyncio
-- **PDF Reports:** ReportLab
+```bash
+# Build and start the stack in detached mode
+docker compose up -d --build
 
----
+# View logs
+docker logs riskintel-backend-1 -f
 
-## AI / Developer Onboarding Context
+# Shut down the stack
+docker compose down
+```
 
-If you are an AI assistant or a new developer joining this project, read this carefully:
-1. **Understand the Constraints:** Do NOT suggest adding autonomous ML models. We are strictly adhering to the Model Risk Committee's decision. E1 and E3 remain disabled/removed.
-2. **Core Focus:** We only work with the deterministic engines (E2, E5, E6) and explicit routing for thin-file borrowers.
-3. **Current Phase:** As per `MINIMUM_VIABLE_RISKINTEL.md`, we are in the **Data Governance and Documentation** phase. 
-   - Immediate next tasks include: Documenting policy rationale for E2/E5 (Model Cards), generating `provenance.json`, consolidating a `LICENSE` inventory, and setting up CI/CD monitoring gates.
-   - Do not attempt to rebuild E1 until a legally defensible dataset is available.
+The Docker stack uses a `.dockerignore` file to ensure lightning-fast builds by omitting legacy analytics and data folders.
 
-**Current Task for this Chat:** *(User: Replace this placeholder with your specific request for this chat, e.g., "Help me write the Model Card for E2", "Setup the CI/CD pipeline", or "Fix a bug in routing.py")*
+## 5. Environment Variables
+
+The application enforces a **fail-fast configuration pattern**. It will refuse to start if the following required variables are missing:
+
+| Variable | Description |
+| :--- | :--- |
+| `DATABASE_URL` | The PostgreSQL connection string (e.g. `postgresql://postgres:postgrespassword@db:5432/riskintel`) |
+| `RISKINTEL_API_KEY` | The secret key required by clients to interact with internal endpoints. |
+| `RISKINTEL_WEBHOOK_SECRET` | The secret used to validate HMAC-SHA256 signatures on incoming webhooks. |
+
+*(These are configured centrally via `pydantic-settings` in `core/config.py`).*
+
+## 6. Running Migrations
+
+Database schemas are version-controlled via Alembic.
+
+To apply migrations up to the latest head:
+```bash
+alembic upgrade head
+```
+
+To create a new migration after modifying an ORM model:
+```bash
+alembic revision --autogenerate -m "description_of_change"
+```
+
+## 7. Running Tests
+
+RiskIntel V2 includes a comprehensive test suite (Unit, FSM State-Graph, and End-to-End). Ensure your local test database is accessible.
+
+```bash
+# Run the entire suite
+pytest tests/ -v
+
+# Run specific E2E validations
+pytest tests/test_e2e_system.py -v
+```
+
+## 8. Authentication
+
+All internal API endpoints require API Key authentication.
+Provide the key via the `X-API-Key` HTTP Header.
+
+```http
+GET /health HTTP/1.1
+X-API-Key: your_secret_api_key
+```
+
+## 9. Webhook Security
+
+External integrations communicating with RiskIntel via webhooks must secure their payload. Webhooks are authenticated via HMAC-SHA256 signatures over the raw payload bytes and a timestamp to prevent replay attacks.
+
+**Headers Required:**
+- `X-Webhook-Timestamp`: Unix timestamp (e.g., `1718000000`)
+- `X-Webhook-Signature`: HMAC SHA256 hex signature.
+
+The signature is generated using the `RISKINTEL_WEBHOOK_SECRET`. 
+*Payload to sign:* `timestamp_string + "." + raw_body_bytes`.
+
+## 10. API Endpoints
+
+### Core Workflows
+- `POST /apply`: Intake a new applicant.
+- `POST /triage`: Run triage math and routing.
+- `POST /optimize`: Evaluate optimization logic.
+
+### Webhooks
+- `POST /webhook/aa`: Receive Account Aggregator data.
+- `POST /webhook/fo`: Receive Field Officer verification data.
+
+### Decision Actions
+- `POST /decision/{session_id}/accept`: Accept a counter-offer.
+- `POST /decision/{session_id}/reject`: Reject a counter-offer.
+- `POST /decision/{session_id}/coapplicant`: Submit a co-applicant to repair a thin file.
+
+### Operational Probes
+- `GET /health`: Liveness probe (Process is running).
+- `GET /ready`: Readiness probe (Database is reachable).
+
+## 11. Recovery Flows
+
+RiskIntel V2 supports state-orchestrated recovery loops to prevent silent rejections:
+
+1. **Reprompt Loop:** If Field Officer (FO) data is missing critical fields or is blurry, the system drops the applicant into the `FO_REPROMPT` state, halting progression until a valid payload arrives.
+2. **Counter-Offers:** If the applicant's requested loan exceeds capacity, the system proposes a mathematically optimized counter-offer (`NEARLY_READY`). The user can explicitly `/accept` or `/reject`.
+3. **Co-Applicant Injection:** If an applicant is `REJECTED` strictly due to thin credit, they may be offered the chance to submit a co-applicant via the `/coapplicant` endpoint, resetting their FSM progression.
+
+## 12. Troubleshooting
+
+- **Server fails to start with Pydantic errors:** Ensure `DATABASE_URL`, `RISKINTEL_API_KEY`, and `RISKINTEL_WEBHOOK_SECRET` are defined in your environment.
+- **Docker build takes forever:** Ensure you haven't deleted the `.dockerignore` file. Legacy datasets in `/data` and models in `/backend` are intentionally ignored.
+- **Webhooks fail silently:** Check the `dead_letter_webhooks` table in Postgres. All invalid payload or out-of-state webhooks are durably logged here even if the main business transaction rolls back.
+- **API returns 503 Service Unavailable:** The `/ready` probe will return 503 if the database is down. Check PostgreSQL connectivity.

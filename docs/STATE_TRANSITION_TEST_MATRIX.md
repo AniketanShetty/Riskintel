@@ -1,6 +1,6 @@
 # RiskIntel V2: State Transition Test Matrix
 
-This matrix provides an exhaustive mapping of every allowed event, transition, and output for the 8 core states in the RiskIntel V2 architecture.
+This matrix provides an exhaustive mapping of every allowed event, transition, and output for the 9 core states in the RiskIntel V2 architecture.
 
 ---
 
@@ -37,6 +37,20 @@ This matrix provides an exhaustive mapping of every allowed event, transition, a
 | **Allowed Transitions** | `VERIFIED`, `NOT_READY_YET` |
 | **Forbidden Transitions** | `INTAKE`, `TRIAGE`, `OPTIMIZATION`, `READY`, `NEARLY_READY` |
 | **Expected Output** | Optimization Engine is strictly frozen. State holds until a verified payload is received or terminal failure occurs. |
+
+---
+
+---
+
+### 3.5 PENDING_REPROMPT
+
+| Parameter | Details |
+| :--- | :--- |
+| **State** | `PENDING_REPROMPT` |
+| **Allowed Events** | `reprompt_submission_received`, `reprompt_timeout_expired` |
+| **Allowed Transitions** | `PENDING_VERIFICATION`, `NOT_READY_YET` |
+| **Forbidden Transitions** | All others. |
+| **Expected Output** | Holds session until secondary contact is provided or TTL expires. |
 
 ---
 

@@ -1,0 +1,25 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+.venv
+.pytest_cache/
+.coverage
+htmlcov/
+tests/
+reports/
+*.db
+.git/
+.gitignore
+.claude/
+
+# Exclude legacy and non-backend large directories
+backend/
+frontend/
+data/
+experiments/
+_design_explorations/

@@ -33,6 +33,17 @@ desktop.ini
 .env.local
 .env.production
 
+# ===== Databases =====
+*.db
+*.sqlite3
+
+# ===== Testing and Analysis =====
+.coverage
+htmlcov/
+.pytest_cache/
+*.out
+*.txt
+
 # ===== Data (large files — track with DVC or download separately) =====
 data/raw/*.csv
 data/raw/*.xlsx

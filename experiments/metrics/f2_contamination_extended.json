@@ -1,9 +1,0 @@
-{
-    "total_train_rows": 3415,
-    "total_test_rows": 854,
-    "unique_overlap_count": 0,
-    "unique_overlap_pct": 0.0,
-    "contaminated_row_count": 0,
-    "contaminated_row_pct": 0.0,
-    "affected_test_rows": 0
-}

@@ -13,3 +13,14 @@
 **Alternatives**: Altering the E5 mathematical weights. Rejected because changing weights would not guarantee fail-safe bounds and would disrupt historical testing baselines.
 **Consequences**: The orchestrator now evaluates these deterministic rules post-E5, actively modifying `band` and `score` before handing off to E4 for explanation generation. This implements a fail-closed hierarchy prioritizing the highest risks first.
 **Status**: Implemented (V1.1)
+
+## ADR-026: Persistence Layer & Alembic Migration Authority
+**Decision**: 
+1. PostgreSQL is established as authoritative persistence.
+2. Alembic is adopted as the migration authority.
+3. UUID generation is strictly standardized via SQLAlchemy `init` event hooks + column defaults.
+4. Explicit `Index()` definitions must be physically declared in ORM `__table_args__` to eliminate metadata drift.
+5. `PROJECT_STATE.md` is strictly designated as the canonical project memory layer.
+**Context**: Required to shift from a V1 SQLite experimental persistence state to a production-ready, highly-constrained PostgreSQL schema that cleanly supports complex state machine transitions and audit ledgers.
+**Consequences**: All persistence layer operations are now mathematically verifiable. Alembic drift alerts serve as a hard gate against implicit ORM metadata changes.
+**Status**: Implemented (2026-06-12)
